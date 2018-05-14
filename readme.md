@@ -14,12 +14,13 @@ On a server as a node app:
 3. Run `node lib/index.js` to start the app on port 3000.
 
 On a firebase project using Firebase Functions:
-__TODO: add setup instructions here__
+
+TODO: add setup instructions.
 
 Comments:
 * Make sure the port is accessible for GET, POST, PUT requests (probably via port forwarding through Nginx or Apache).
 
-__TODO: add something about security / access / kobo accounts.__
+TODO: add something about security / access / kobo accounts.
 
 ## Endpoints / Functions list:
 __TODO: add better explanations of functions__
@@ -31,17 +32,17 @@ __TODO: add better explanations of functions__
 * **customArchiveForm** - uses the customSetFormInfo to set a given form as "downloadable: false" (effectively archiving it on Kobotools)
 * **customRestoreForm** - uses the customSetFormInfo to set a given form as "downloadable: true".
 * **countRecords**: gets the number of records submitted for a given form_id.
-* **pullData**: work in progress - receives a form_id and set of existing record UUIDs, and gets only the new records from kobo.
-* **addCsv**: receives data in JSON form (via res.body.data_file), converts it into a csv file via buildCSV, and then uploads that file to the given kobo form. Current version checks first to see if an existing media file exists with the same name, and deletes it if it does to avoid conflict.
-* **uploadCsv**: seperated function from addCsv.
-* **shareForm**: Shares a form (specified via req.body.form_id) with a user (specified by req.body.username) and grants a role (specified by req.body.role);
+* **pullData**: _needs refactoring / testing_ - receives a form_id and set of existing record UUIDs, and gets only the new records from kobo.
+* **addCsv**: _probaly needs checking_ receives data in JSON form (via res.body.data_file), converts it into a csv file via buildCSV, and then uploads that file to the given kobo form. Current version checks first to see if an existing media file exists with the same name, and deletes it if it does to avoid conflict.
+* **uploadCsv**: _probaly needs checking_ seperated function from addCsv.
+* **shareForm**: _is pretty basic, could be extended by allowing many users to be added to one form, or one user to be added to many forms._ Shares a form (specified via req.body.form_id) with a user (specified by req.body.username) and grants a role (specified by req.body.role);
 
 ### collectedData.ts
-* **jsonPOST**: acts as a listener for JSON POST requests sent directly by Kobotools. Receives a JSON POST record and inserts it into a local database. 
+* **jsonPOST**: _no idea if this currently works..._ acts as a listener for JSON POST requests sent directly by Kobotools. Receives a JSON POST record and inserts it into a local database. 
 
 **NOTE**: The jsonPOST function is a placeholder (and not well tested). It's setup to run with a postgresql database, but could be configured to do anything with the receiving data.
 
-__TODO: write up the jsonPOST options using examples from various previous node apps that do the same thing__
+TODO: write up the jsonPOST options using examples from various previous node apps that do the same thing.
 
 ### formBuilter.ts
 * **buildXLSX**: takes a JSON object containing a form definition (must include a survey, choices and settings object), and builds a complete xlsx file.
