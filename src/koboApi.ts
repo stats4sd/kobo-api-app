@@ -278,6 +278,118 @@ export const pullData = function (req, res) {
         res.status(405).send(req.method + " method not allowed");
     }
 }
+
+
+
+export const addCsv = function (req, res) {
+  if(req.method === "POST") {
+
+    const dataType = req.body.data_type;
+    const dataValue = req.body.data_value;
+    const xform = req.body.xform;
+    const dataFile = req.body.data_file;
+
+    //first,  check if the form already has an attached file with the given name.
+    const checkOptions:any = _setOptions(req,'metadata?xform='+xform);
+    checkOptions.method = "GET";
+    
+    _sendRequest(checkOptions).then(function(checkBack:any){
+      console.log("checkback",checkBack);
+      const metaData = JSON.parse(checkBack.body);
+      let url = ""
+      const fileExists:boolean = metaData.some(function(item,index){
+        url = item.url;
+        return item.data_value = dataValue;
+      })
+
+      if(fileExists){
+        const deleteOptions = _setOptions(req);
+        deleteOptions.method = "DELETE";
+        deleteOptions.url = url;
+
+        _sendRequest(deleteOptions).then(function(deleteBack){
+          uploadCsv(req,res);
+         })
+      }
+      else{
+        uploadCsv(req,res)
+      }
+      console.log("#####")
+      console.log("url = ",url);
+      console.log("#####");
+
+
+    })
+  }
+  else {
+        res.status(405).send(req.method + " method not allowed")
+    }
+}
+
+function uploadCsv(req,res){
+  //convert data_file to csv;
+    const dataType = req.body.data_type;
+    const dataValue = req.body.data_value;
+    const xform = req.body.xform;
+    const dataFile = req.body.data_file;
+  
+  builder.buildCSV(dataFile,dataValue).then(build => {
+    const filePath:string = build['filePath']
+    const options:any = _setOptions(req,'metadata')
+
+    options.formData = {
+      data_type: dataType,
+      data_value: dataValue,
+      xform: xform,
+      data_file: fs.createReadStream(filePath)
+    }
+
+
+    _sendRequest(options).then(function(sendBack:any){
+      let msg: any;
+      try{
+        msg = JSON.parse(sendBack.body)
+      }
+      catch(error) {
+
+        msg = {
+          body: sendBack.body,
+          err: error
+        }
+      }
+      res.send({
+        responseCode: sendBack.responseCodes,
+        msg: msg
+      })
+    }) //end sendRequest
+    
+  })
+}
+
+
+// share one form with one user
+export const shareForm = function (req, res) {
+  if(req.method === "POST") {
+
+    const form_id = req.body.form_id.toString();
+    const username = req.body.username;
+    const role = req.body.role;
+
+    const options:any = _setOptions(req,"forms/"+form_id+"/share");
+
+    // add specific options:
+    options.formData = {
+      "username": username,
+      "role": role
+    };
+    
+    _sendRequest(options,res).then(function(sendback:any){})
+  }
+  else {
+      res.status(405).send(req.method + " method not allowed")
+  }
+}
+
  
 /************ Helper functions ****************************************************
 These are used internally to do common tasks like setting request options and

@@ -27,18 +27,18 @@ const auth = "Basic" + config.kobotoolbox.token;
 export const jsonPOST = function (req, res?) {
     console.log('receiving data from json POST', req.method, req.path)
 
-    if(req.method!="GET" && req.method!="POST"){
+    if(req.method!=="GET" && req.method!=="POST"){
       res.status(405).send("Please use a different method");
     }
 
-    if(req.method=="GET"){
+    if(req.method==="GET"){
       res.status(200).send("This is working. If you don't GET it, you might GET it");
     }
 
-    if(req.method=="POST"){
-      //receive data; 
+    if(req.method==="POST"){
+      //receive data;
       //
-      let record = req.body;
+      const record = req.body;
 
       console.log("##############################");
       console.log("record = ",record);

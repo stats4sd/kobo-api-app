@@ -4,6 +4,8 @@ import * as path from 'path'
 import * as fs from 'fs'
 import * as os from 'os'
 import * as randomstring from 'randomstring'
+import { Parser } from 'json2csv'
+
 
 /*
 This file contains the main function to convert form data into an xlsx file, which is then written to the file system for passing into kobo
@@ -56,4 +58,25 @@ export const buildXLSX = function (form) {
         })
     })
 
+}
+
+export const buildCSV = function(json,filename) {
+    //convert the json file into a csv string:
+    
+    return new Promise((resolve,reject) => {
+
+        const parser = new Parser();
+
+        const csv = parser.parse(json);
+        const filePath = path.join(os.tmpdir(), filename)
+        fs.writeFile(filePath,csv,'binary',(err)=> {
+            if(err) throw err;
+            else console.log('csv file written successfully')
+            resolve({
+                filePath:filePath,
+                err:err
+            })
+
+        })
+    })
 }
