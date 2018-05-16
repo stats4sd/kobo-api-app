@@ -1,17 +1,18 @@
 // node module imports
 import * as request from 'request';
 import * as fs from 'fs';
- 
+
 // custom module imports
 import * as collectedData from './collectedData';
 import * as builder from './formBuilder';
-import * as iniConfig from './config';
+import { config } from '../config/config';
+import { Request, Response } from 'express';
 
-const config = iniConfig.config;
 const koboURL = config.kobotoolbox.server
+let auth
 
-if(config.kobotoolbox.token){
-  const auth = "Basic" + config.kobotoolbox.token
+if (config.kobotoolbox.token) {
+    const auth = "Basic" + config.kobotoolbox.token
 }
 
 // standard function to redirect non-custom requests directly to kobo
@@ -21,7 +22,7 @@ export const pipeRequest = function (req, res) {
     const options = _setOptions(req)
     _sendRequest(options, res)
 }
- 
+
 /************ Custom Endpoints ****************************************************
 These are codeblocks called from api requests directly to the function name
 e.g. /getForms
@@ -39,30 +40,27 @@ export const getForms = function (req, res) {
 }
 
 // Receives JSON form data, builds form and deploys to kobo
-export const customDeployForm = function (req, res) {
+export const customDeployForm = async function (req: Request, res: Response) {
     if (req.method === "POST") {
         const form = req.body
         // build form and send request to kobo forms api, returning forms object
-        builder.buildXLSX(form).then(
-            build => {
-                const filePath: string = build['filePath']
-                const options: any = _setOptions(req, 'forms')
-                // add formData to standard options object
-                console.log(filePath)
-                options.formData = {
-                    xls_file: fs.createReadStream(filePath)
-                }
-                // example intercepting standard response object from _sendRequest function
-                // probably not necessary as sending same form back that was sent (more for dev)
-                _sendRequest(options).then(function(sendBack:any){
-                    const msg = JSON.parse(sendBack.body)
-                    res.send({
-                        form: form,
-                        msg: msg,
-                        responseCode: sendBack.responseCodes
-                    })
-                })
-            })
+        const build = await builder.buildXLSX(form)
+        const filePath: string = build['filePath']
+        const options: any = _setOptions(req, 'forms')
+        // add formData to standard options object
+        console.log(filePath)
+        options.formData = {
+            xls_file: fs.createReadStream(filePath)
+        }
+        // example intercepting standard response object from _sendRequest function
+        // probably not necessary as sending same form back that was sent (more for dev)
+        const sendback:any = await _sendRequest(options)
+        const msg = JSON.parse(sendback.body)
+        res.send({
+            form: form,
+            msg: msg,
+            responseCode: sendback.responseCodes
+        })
     }
     else {
         res.status(405).send(req.method + " method not allowed")
@@ -73,12 +71,12 @@ export const customDeployForm = function (req, res) {
 // could be better merged if included both form (fields) and formData (xlsform) fields
 export const customUpdateForm = function (req, res) {
     if (req.method === "PATCH") {
-        const form = req.body
+        const form: koboForm = req.body
         // build form and send request to kobo forms api, returning forms object
         builder.buildXLSX(form).then(
             build => {
                 const filePath: string = build['filePath']
-                const options: any = _setOptions(req,'forms/'+form.kobo_id)
+                const options: any = _setOptions(req, 'forms/' + form.kobo_id)
                 options.formData = {
                     xls_file: fs.createReadStream(filePath)
                 }
@@ -97,14 +95,14 @@ export const customUpdateForm = function (req, res) {
 
 // generic update form function, can be passed update values in body 
 // or passed from other functions
-export const customSetFormInfo = function (req,res,_update?,_urlToReplace?){
+export const customSetFormInfo = function (req, res, _update?, _urlToReplace?) {
     if (req.method === "PATCH") {
-        console.log("archive req body",req.body);
-        const options:any = _setOptions(req,"forms/"+req.body.kobo_id)
+        console.log("archive req body", req.body);
+        const options: any = _setOptions(req, "forms/" + req.body.kobo_id)
         // add form data using either supplied or body
         let update = _update
-        if(!_update){
-            console.log('setting body as form',req.body, typeof req.body)
+        if (!_update) {
+            console.log('setting body as form', req.body, typeof req.body)
             update = req.body
         }
         options.form = update
@@ -115,37 +113,37 @@ export const customSetFormInfo = function (req,res,_update?,_urlToReplace?){
 
 // Archive forms
 export const customArchiveForm = function (req, res) {
-    customSetFormInfo(req,res,{downloadable:'false'},'customArchiveForm')
+    customSetFormInfo(req, res, { downloadable: 'false' }, 'customArchiveForm')
 }
 
 // Restore archived forms - same as above except {downloadable:'true'}
 export const customRestoreForm = function (req, res) {
-    customSetFormInfo(req,res,{downloadable:'true'},'customRestoreForm')
+    customSetFormInfo(req, res, { downloadable: 'true' }, 'customRestoreForm')
 }
 
 // countRecords:
 // Expects request to include a "kobo_id" property, containing an id of a form on the kobo server. 
 // Should send back a count of all data records found for that form.
-export const countRecords = function(req,res){
-    console.log("countRecords request ", req.method,req.path);
+export const countRecords = function (req, res) {
+    console.log("countRecords request ", req.method, req.path);
 
     const body = req.body;
 
-    if(!body.kobo_id){
+    if (!body.kobo_id) {
         res.status(400).send("error - please include a kobo form id in the post request");
         return;
     }
 
-    const options: any = _setOptions(req, 'data/'+body.kobo_id+'?fields=["_id"]');
+    const options: any = _setOptions(req, 'data/' + body.kobo_id + '?fields=["_id"]');
     options.method = "GET";
 
-    _sendRequest(options).then(function(sendBack:any){
+    _sendRequest(options).then(function (sendBack: any) {
 
         //if request was successful, get the ids to count:
-        if(sendBack.statusCode === 200) {
-           const ids:any = JSON.parse(sendBack.body);
-           
-            console.log("status_code:",sendBack.statusCode)
+        if (sendBack.statusCode === 200) {
+            const ids: any = JSON.parse(sendBack.body);
+
+            console.log("status_code:", sendBack.statusCode)
             console.log(ids.length);
             res.send({
                 count: ids.length,
@@ -153,14 +151,14 @@ export const countRecords = function(req,res){
                 kobo_id: body.kobo_id
             });
         }
-        
 
-       else{
-           res.send({
-               statusCode: sendBack.statusCode,
-               body: sendBack.body
-           })
-       }
+
+        else {
+            res.send({
+                statusCode: sendBack.statusCode,
+                body: sendBack.body
+            })
+        }
 
 
     })
@@ -184,37 +182,37 @@ export const pullData = function (req, res) {
         const existing_ids = JSON.parse(requestBody.existing_ids)
         console.log(existing_ids)
         let cleanIds = [];
-        existing_ids.forEach(function(id,index){
-            if(id !== null){
+        existing_ids.forEach(function (id, index) {
+            if (id !== null) {
                 cleanIds = existing_ids[index];
             }
         })
 
-        console.log("new existing IDs list = ",cleanIds)
+        console.log("new existing IDs list = ", cleanIds)
         //reqest data for every kobo_id sent in the reqeust
-        for(const kobo_id of requestBody.kobo_ids){
+        for (const kobo_id of requestBody.kobo_ids) {
             //make the the kobo_id is not null
-            if(kobo_id !== null){
+            if (kobo_id !== null) {
 
                 /*
                 2018 - April: NOTE - The Kobo API documentation describes a way of querying records by tag, using "?tags=tag1,tag2" as a GET parameter, (and also "?not_tagged=tag1", which would be ideal for this). Annoyingly, this doesn't work, and these parameterrs do nothing to modify the data returned from the GET request.
 
                 For now - we request ALL the records, then filter within this code. Not efficient, as we must pull all the data every time, but it's the best we can do quickly for now.
                 */
-                console.log("kobo_id = ",kobo_id)
-                const options: any = _setOptions(req,'data/'+kobo_id)
+                console.log("kobo_id = ", kobo_id)
+                const options: any = _setOptions(req, 'data/' + kobo_id)
                 options.method = "GET";
 
-                console.log("options: ",options);
+                console.log("options: ", options);
 
-                _sendRequest(options).then(function(sendBack:any){
+                _sendRequest(options).then(function (sendBack: any) {
 
                     //body is the full set of records from form with id = kobo_id;
                     const records: any = JSON.parse(sendBack.body);
                     //console.log(records);
                     //keep only NEW records (i.e. ones without the "pulled" tag)
-                   
-                   
+
+
                     let count: number = 0;
                     const newRecords: any = [];
                     let newCount: number = 0;
@@ -222,37 +220,37 @@ export const pullData = function (req, res) {
                     console.log("##################################")
                     //console.log("records:",records)
                     console.log("##################################")
-                    for(const record of records){
-                       //console.log("record = ",record);
-                       count++
+                    for (const record of records) {
+                        //console.log("record = ",record);
+                        count++
 
-                       // find records without the "pulled tag" and add them to the new records array;
-                       if(!existing_ids.some(function(id,index){
-                           return id===record._uuid;
-                        })){
-                           record._form_kobo_id = kobo_id;
-                           newRecords.push(record);
-                           newCount++;
+                        // find records without the "pulled tag" and add them to the new records array;
+                        if (!existing_ids.some(function (id, index) {
+                            return id === record._uuid;
+                        })) {
+                            record._form_kobo_id = kobo_id;
+                            newRecords.push(record);
+                            newCount++;
 
 
-                           const upload = collectedData.jsonPOST({
-                               method:"POST",
-                               body:record
-                           })
-                       }
+                            const upload = collectedData.jsonPOST({
+                                method: "POST",
+                                body: record
+                            })
+                        }
 
                     } //end for records
 
-                    console.log("new Records = ",newRecords);
+                    console.log("new Records = ", newRecords);
 
 
                     console.log("##################################")
-                    console.log("count = ",count)
+                    console.log("count = ", count)
                     console.log("##################################")
 
 
                     console.log("##################################")
-                    console.log("newCount = ",newCount)
+                    console.log("newCount = ", newCount)
                     console.log("##################################")
 
                     /// NOTE - the kobo tagging system for records  doesn't work reliably.
@@ -264,11 +262,11 @@ export const pullData = function (req, res) {
                     // updateOptions.json = true;
 
                     // _sendRequest(updateOptions).then(function(sendBack: any){
-                       // console.log("tags updated for form: ", sendBack.body );
-                             //send the new records back.
+                    // console.log("tags updated for form: ", sendBack.body );
+                    //send the new records back.
                     res.send({
-                       request: requestBody,
-                       body: newRecords
+                        request: requestBody,
+                        body: newRecords
                     })
                 })
             } // end if kobo_id != null
@@ -282,115 +280,115 @@ export const pullData = function (req, res) {
 
 
 export const addCsv = function (req, res) {
-  if(req.method === "POST") {
+    if (req.method === "POST") {
 
-    const dataType = req.body.data_type;
-    const dataValue = req.body.data_value;
-    const xform = req.body.xform;
-    const dataFile = req.body.data_file;
+        const dataType = req.body.data_type;
+        const dataValue = req.body.data_value;
+        const xform = req.body.xform;
+        const dataFile = req.body.data_file;
 
-    //first,  check if the form already has an attached file with the given name.
-    const checkOptions:any = _setOptions(req,'metadata?xform='+xform);
-    checkOptions.method = "GET";
-    
-    _sendRequest(checkOptions).then(function(checkBack:any){
-      console.log("checkback",checkBack);
-      const metaData = JSON.parse(checkBack.body);
-      let url = ""
-      const fileExists:boolean = metaData.some(function(item,index){
-        url = item.url;
-        return item.data_value = dataValue;
-      })
+        //first,  check if the form already has an attached file with the given name.
+        const checkOptions: any = _setOptions(req, 'metadata?xform=' + xform);
+        checkOptions.method = "GET";
 
-      if(fileExists){
-        const deleteOptions = _setOptions(req);
-        deleteOptions.method = "DELETE";
-        deleteOptions.url = url;
+        _sendRequest(checkOptions).then(function (checkBack: any) {
+            console.log("checkback", checkBack);
+            const metaData = JSON.parse(checkBack.body);
+            let url = ""
+            const fileExists: boolean = metaData.some(function (item, index) {
+                url = item.url;
+                return item.data_value = dataValue;
+            })
 
-        _sendRequest(deleteOptions).then(function(deleteBack){
-          uploadCsv(req,res);
-         })
-      }
-      else{
-        uploadCsv(req,res)
-      }
-      console.log("#####")
-      console.log("url = ",url);
-      console.log("#####");
+            if (fileExists) {
+                const deleteOptions = _setOptions(req);
+                deleteOptions.method = "DELETE";
+                deleteOptions.url = url;
+
+                _sendRequest(deleteOptions).then(function (deleteBack) {
+                    uploadCsv(req, res);
+                })
+            }
+            else {
+                uploadCsv(req, res)
+            }
+            console.log("#####")
+            console.log("url = ", url);
+            console.log("#####");
 
 
-    })
-  }
-  else {
+        })
+    }
+    else {
         res.status(405).send(req.method + " method not allowed")
     }
 }
 
-function uploadCsv(req,res){
-  //convert data_file to csv;
+function uploadCsv(req, res) {
+    //convert data_file to csv;
     const dataType = req.body.data_type;
     const dataValue = req.body.data_value;
     const xform = req.body.xform;
     const dataFile = req.body.data_file;
-  
-  builder.buildCSV(dataFile,dataValue).then(build => {
-    const filePath:string = build['filePath']
-    const options:any = _setOptions(req,'metadata')
 
-    options.formData = {
-      data_type: dataType,
-      data_value: dataValue,
-      xform: xform,
-      data_file: fs.createReadStream(filePath)
-    }
+    builder.buildCSV(dataFile, dataValue).then(build => {
+        const filePath: string = build['filePath']
+        const options: any = _setOptions(req, 'metadata')
 
-
-    _sendRequest(options).then(function(sendBack:any){
-      let msg: any;
-      try{
-        msg = JSON.parse(sendBack.body)
-      }
-      catch(error) {
-
-        msg = {
-          body: sendBack.body,
-          err: error
+        options.formData = {
+            data_type: dataType,
+            data_value: dataValue,
+            xform: xform,
+            data_file: fs.createReadStream(filePath)
         }
-      }
-      res.send({
-        responseCode: sendBack.responseCodes,
-        msg: msg
-      })
-    }) //end sendRequest
-    
-  })
+
+
+        _sendRequest(options).then(function (sendBack: any) {
+            let msg: any;
+            try {
+                msg = JSON.parse(sendBack.body)
+            }
+            catch (error) {
+
+                msg = {
+                    body: sendBack.body,
+                    err: error
+                }
+            }
+            res.send({
+                responseCode: sendBack.responseCodes,
+                msg: msg
+            })
+        }) //end sendRequest
+
+    })
 }
 
 
 // share one form with one user
 export const shareForm = function (req, res) {
-  if(req.method === "POST") {
+    if (req.method === "POST") {
 
-    const form_id = req.body.form_id.toString();
-    const username = req.body.username;
-    const role = req.body.role;
+        const form_id = req.body.form_id.toString();
+        const username = req.body.username;
+        const role = req.body.role;
 
-    const options:any = _setOptions(req,"forms/"+form_id+"/share");
+        const options: any = _setOptions(req, "forms/" + form_id + "/share");
 
-    // add specific options:
-    options.formData = {
-      "username": username,
-      "role": role
-    };
-    
-    _sendRequest(options,res).then(function(sendback:any){})
-  }
-  else {
-      res.status(405).send(req.method + " method not allowed")
-  }
+        // add specific options:
+        options.formData = {
+            "username": username,
+            "role": role
+        };
+
+        _sendRequest(options, res).then(function (sendback: any) { })
+    }
+    else {
+        res.status(405).send(req.method + " method not allowed")
+    }
 }
 
- 
+
 /************ Helper functions ****************************************************
 These are used internally to do common tasks like setting request options and
 sending requests
@@ -414,9 +412,9 @@ function _setOptions(req, newPath?) {
 
     let finalPath = newPath;
 
-    console.log("finalPath",finalPath);
+    console.log("finalPath", finalPath);
     // set options for method, url and headers, including any path update
-    if(!newPath){
+    if (!newPath) {
         finalPath = req.path;
     }
 
@@ -434,23 +432,23 @@ function _sendRequest(options, res?) {
     // send request to kobo
     return new Promise((resolve, reject) => {
         request(options, function (err, response, body) {
-           // console.log('response error', err)
+            // console.log('response error', err)
             // fs.writeFile('/tmp/test.json',JSON.stringify(response,null,2),function(err){
             //     if(err){
             //         console.log(err);
             //     }
             //     console.log("response written to file");
             // })
-           // console.log('response body', body)
+            // console.log('response body', body)
             // handle errors
             if (err) {
-                if(res){
+                if (res) {
                     res.status(400).send({
-                    error: err,
-                    options: options,
-                    response: response,
-                    body: body
-                })
+                        error: err,
+                        options: options,
+                        response: response,
+                        body: body
+                    })
                 }
                 else {
                     resolve({
@@ -465,8 +463,8 @@ function _sendRequest(options, res?) {
             // handle response. If original res object specified automatically send response containing body; otherwise pass back to promise resolve.
             else {
                 //handle non 200 responses, so status codes can be passed back to the originating app with the rest of the respnose.
-                if(response.statusCode > 299 || response.statusCode < 200){
-                    if(res) {
+                if (response.statusCode > 299 || response.statusCode < 200) {
+                    if (res) {
                         res.status(response.statusCode).send({
                             error: "unsuccessful request",
                             options: options,
@@ -477,7 +475,7 @@ function _sendRequest(options, res?) {
 
                     resolve(response)
                 }
-                else{
+                else {
                     try {
                         // attempt to parse response to return an object, with fallback of returning string
                         const bodyObj = JSON.parse(body);
@@ -490,13 +488,17 @@ function _sendRequest(options, res?) {
                         resolve(sendBack)
 
                     } catch (error) {
-                        if (res) { res.send({body: body, statusCode: response.statusCode}) }
-                        resolve({body: body, statusCode: response.statusCode})
+                        if (res) { res.send({ body: body, statusCode: response.statusCode }) }
+                        resolve({ body: body, statusCode: response.statusCode })
                     }
                 }
             }
         })
     })
+}
+
+interface koboForm {
+    kobo_id: string
 }
 
 

@@ -4,10 +4,8 @@ import * as express from 'express';
 import * as bodyParser from 'body-parser'
 import * as cors from 'cors';
 
-
-
 //custom module imports
-import * as config from './config';
+import {config}  from '../config/config';
 import * as kobo from './koboApi';
 import * as collectedData from './collectedData';
 

@@ -5,7 +5,7 @@
     "build": "./node_modules/.bin/tsc",
     "serve": "npm run build && firebase serve --only functions",
     "shell": "npm run build && firebase experimental:functions:shell",
-    "start": "npm run shell",
+    "start": "node node_modules/ts-node/dist/bin.js ./src/index.ts",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log"
   },
@@ -26,6 +26,7 @@
     "pg": "^7.4.3",
     "randomstring": "^1.1.5",
     "request": "^2.83.0",
+    "ts-node": "^6.0.3",
     "xlsx": "^0.11.18"
   },
   "devDependencies": {
