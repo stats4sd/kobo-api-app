@@ -62,9 +62,11 @@ app.all('*', function (req, res, next) {
 // Expose Express API as a single Cloud Function:
 exports.api = functions.https.onRequest(app);
 
-app.listen(3000, "localhost", function(listen){
+export default app.listen(3000, "localhost", function(listen){
     console.log("Kobo API listening on port 3000");
 })
+
+
 
 
 

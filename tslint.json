@@ -15,7 +15,7 @@
     "no-shadowed-variable": true,
     "no-empty": [true, "allow-empty-catch"],
     "no-floating-promises": true,
-    "no-implicit-dependencies": true,
+    "no-implicit-dependencies": [true,"dev"],
     "no-invalid-this": true,
     "no-string-throw": true,
     "no-unsafe-finally": true,

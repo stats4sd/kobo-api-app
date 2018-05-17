@@ -5,7 +5,9 @@
     "build": "./node_modules/.bin/tsc",
     "serve": "npm run build && firebase serve --only functions",
     "shell": "npm run build && firebase experimental:functions:shell",
-    "start": "node node_modules/ts-node/dist/bin.js ./src/index.ts",
+    "start": "cp config/config.dev.ts config/config.ts && node node_modules/ts-node/dist/bin.js ./src/index.ts",
+    "start:prod": "cp config/config.prod.ts config/config.ts && node node_modules/ts-node/dist/bin.js ./src/index.ts",
+    "test": "mocha -r ts-node/register test/*.ts",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log"
   },
@@ -30,9 +32,16 @@
     "xlsx": "^0.11.18"
   },
   "devDependencies": {
+    "@types/chai": "^4.1.3",
+    "@types/chai-http": "^3.0.4",
+    "@types/mocha": "^5.2.0",
+    "chai": "^4.1.2",
+    "chai-http": "^4.0.0",
     "eslint-config-google": "^0.9.1",
+    "mocha": "^5.1.1",
+    "ts-node": "^6.0.3",
     "tslint": "^5.8.0",
-    "typescript": "^2.5.3"
+    "typescript": "^2.8.3"
   },
   "private": true
 }

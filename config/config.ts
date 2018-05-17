@@ -11,5 +11,4 @@ export const config = {
         password:"",
         port:null
     }
-
 }
