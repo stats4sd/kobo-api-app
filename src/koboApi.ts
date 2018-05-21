@@ -411,8 +411,8 @@ function _setOptions(req, newPath?) {
 
     //add authorization - currently admin-only, will be passed from WordPress soon
     req.headers.authorization = auth
-    req.headers.origin = "api.stats4sdtest.online"
-    req.headers.host = "stats4sdtest.online"
+    // req.headers.origin = "api.stats4sdtest.online"
+    // req.headers.host = "stats4sdtest.online"
 
     let finalPath = newPath;
 
