@@ -11,8 +11,12 @@ import { Request, Response } from 'express';
 const koboURL = config.kobotoolbox.server
 let auth
 
-if (config.kobotoolbox.token) {
-    const auth = "Basic" + config.kobotoolbox.token
+if (config.kobotoolbox.token!="") {
+    auth = `Token ${config.kobotoolbox.token}`
+}
+else if(config.kobotoolbox.password!=""){
+    const enc = new Buffer(config.kobotoolbox.username+":"+config.kobotoolbox.password).toString('base64')
+    auth = `Basic ${enc}`
 }
 
 // standard function to redirect non-custom requests directly to kobo
