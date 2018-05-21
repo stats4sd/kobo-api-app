@@ -14,7 +14,7 @@ Input requires a 'form' object, which contains keys for 'survey' and 'choices', 
 
 */
 
-export const buildXLSX = function (form) {
+export const buildXLSX = function (form:builderForm) {
     // take form with survey data, convert to xlsx and write file to tmp location
     return new Promise((resolve, reject) => {
         // build survey sheet
@@ -79,4 +79,13 @@ export const buildCSV = function(json,filename) {
 
         })
     })
+}
+
+// *** rough interface for testing, to be properly defined
+export interface builderForm{
+    survey:any,
+    choices:any,
+    title:string,
+    settings:any,
+    _previewMode:boolean
 }

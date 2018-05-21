@@ -31,27 +31,27 @@ otherwise pipe request directly to kobo native API
 app.all('*', function (req, res, next) {
 
     //log the version number for dev / tracking:
-    console.log('api build number', buildNumber)
+    // console.log('api build number', buildNumber)
     
     //get the endpoint based on the request path
     const endpoint = req.path.split('/')[1]
     
     if (kobo[endpoint]) {
         // run custom function if exists
-        console.log('running custom function', req.method, endpoint)
+        // console.log('running custom function', req.method, endpoint)
         kobo[endpoint](req, res)
     }
     else{
         //added option to pipe request to data handling:
     
         if(collectedData[endpoint]){
-            console.log("running custom data function", req.method, endpoint);
+            // console.log("running custom data function", req.method, endpoint);
             collectedData[endpoint](req, res);
         }
         
         else {
             // otherwise pass to kobo native api
-            console.log('piping request', req.method, endpoint)
+            // console.log('piping request', req.method, endpoint)
             kobo.pipeRequest(req, res)
         }
     }

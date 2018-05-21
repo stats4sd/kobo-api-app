@@ -21,7 +21,7 @@ else if(config.kobotoolbox.password!=""){
 
 // standard function to redirect non-custom requests directly to kobo
 export const pipeRequest = function (req, res) {
-    console.log('piping request', req.method, req.path)
+    // console.log('piping request', req.method, req.path)
     // pipe requests directly to kobo api
     const options = _setOptions(req)
     _sendRequest(options, res)
@@ -416,7 +416,7 @@ function _setOptions(req, newPath?) {
 
     let finalPath = newPath;
 
-    console.log("finalPath", finalPath);
+    // console.log("finalPath", finalPath);
     // set options for method, url and headers, including any path update
     if (!newPath) {
         finalPath = req.path;
