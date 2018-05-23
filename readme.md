@@ -11,7 +11,8 @@ Running the app requires npm / node to be installed.
 On a server as a node app:
 1. Clone the repository into a folder on your server.
 2. Run `npm install` or `yarn` to install the node module dependancies
-3. Run `node lib/index.js` to start the app on port 3000.
+3. Add your own config setting in config.dev.ts and config.prod.ts
+4. Run `npm start` to start the app on port 3000.
 
 On a firebase project using Firebase Functions:
 

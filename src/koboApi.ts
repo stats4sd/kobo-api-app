@@ -75,7 +75,7 @@ export const customDeployForm = async function (req: Request, res: Response) {
 // could be better merged if included both form (fields) and formData (xlsform) fields
 export const customUpdateForm = function (req, res) {
     if (req.method === "PATCH") {
-        const form: koboForm = req.body
+        const form = req.body
         // build form and send request to kobo forms api, returning forms object
         builder.buildXLSX(form).then(
             build => {
