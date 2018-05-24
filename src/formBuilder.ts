@@ -62,7 +62,7 @@ export const buildXLSX = async (form: IBuilderForm) => {
 
 export const buildCSV = (json, filename) => {
   // convert the json file into a csv string:
-  return new Promise((resolve, reject) => {
+  return new Promise<string>((resolve, reject) => {
     const parser = new Parser();
     const csv = parser.parse(json);
     const filePath = path.join(os.tmpdir(), filename);
@@ -72,10 +72,7 @@ export const buildCSV = (json, filename) => {
       } else {
         console.log("csv file written successfully");
       }
-      resolve({
-        filePath,
-        err
-      });
+      resolve(filePath);
     });
   });
 };

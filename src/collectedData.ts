@@ -2,12 +2,12 @@
 Api endpoints for handling data collected via the ODK forms on Kobo
  */
 
-import * as request from 'request'
-import * as fs from 'fs'
-import { Pool, Client } from 'pg'
-import {config}  from '../config/config';
+import * as fs from "fs";
+import { Client, Pool } from "pg";
+import * as request from "request";
+import { config } from "../config/config";
 
-//Connect to postgres local db
+// Connect to postgres local db
 const pool = new Pool({
   database: config.pg.db_name,
   user: config.pg.username,
@@ -19,12 +19,13 @@ const pool = new Pool({
 const koboURL = config.kobotoolbox.server;
 const auth = "Basic" + config.kobotoolbox.token;
 
-
-export const jsonPOST = function (req, res?) {
-  console.log('receiving data from json POST', req.method, req.path)
+export const jsonPOST = (req, res?) => {
+  console.log("receiving data from json POST", req.method, req.path);
   switch (req.method) {
     case "GET":
-      res.status(200).send("This is working. If you don't GET it, you might GET it");
+      res
+        .status(200)
+        .send("This is working. If you don't GET it, you might GET it");
       break;
 
     case "POST":
@@ -33,7 +34,7 @@ export const jsonPOST = function (req, res?) {
         ` 📰Record
         ${record}
       `
-      )
+      );
       /*
       POSTGRES TABLE:
   
@@ -45,40 +46,29 @@ export const jsonPOST = function (req, res?) {
        */
 
       const query = {
-        text: "INSERT INTO xls_collected_data(record_id,form_id,record_data) VALUES($1,$2,$3)",
-        values: [
-          record._uuid,
-          record._form_kobo_id,
-          record
-        ]
-      }
+        text:
+          "INSERT INTO xls_collected_data(record_id,form_id,record_data) VALUES($1,$2,$3)",
+        values: [record._uuid, record._form_kobo_id, record]
+      };
 
-      pool.connect()
-        .then(function (client) {
-          return client.query(query)
-            .then(function (queryRes) {
-              console.log("queryRes: ", queryRes);
-              if (res) {
-                res.status(200).send({
-                  rows: queryRes.rows
-                })
-              }
-              else {
-                return true;
-              }
-              client.release()
-              console.log("done - client released");
-            })
-
-        })
+      pool.connect().then(client => {
+        return client.query(query).then(queryRes => {
+          console.log("queryRes: ", queryRes);
+          if (res) {
+            res.status(200).send({
+              rows: queryRes.rows
+            });
+          } else {
+            return true;
+          }
+          client.release();
+          console.log("done - client released");
+        });
+      });
       break;
 
     default:
       res.status(405).send("Please use a different method");
       break;
   }
-
-}
-
-
-
+};
