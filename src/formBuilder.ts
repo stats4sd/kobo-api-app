@@ -1,91 +1,97 @@
-
-import { utils, write, WorkBook, writeFile } from 'xlsx';
-import * as path from 'path'
-import * as fs from 'fs'
-import * as os from 'os'
-import * as randomstring from 'randomstring'
-import { Parser } from 'json2csv'
-
+import * as fs from "fs";
+import { Parser } from "json2csv";
+import * as os from "os";
+import * as path from "path";
+import * as randomstring from "randomstring";
+import { utils, WorkBook, write, writeFile } from "xlsx";
 
 /*
 This file contains the main function to convert form data into an xlsx file, which is then written to the file system for passing into kobo
 Input requires a 'form' object, which contains keys for 'survey' and 'choices', and corresponding arrays of question objects
-
-
 */
 
-export const buildXLSX = function (form:builderForm) {
-    // take form with survey data, convert to xlsx and write file to tmp location
-    return new Promise((resolve, reject) => {
-        // build survey sheet
-        const ws_name = 'survey';
-        const wb: WorkBook = { SheetNames: [], Sheets: {} };
-        const ws: any = utils.json_to_sheet(form.survey);
-        wb.SheetNames.push(ws_name);
-        wb.Sheets[ws_name] = ws;
-        // build choices sheet
-        const ws_name2 = 'choices';
-        const ws2: any = utils.json_to_sheet(form.choices);
-        wb.SheetNames.push(ws_name2);
-        wb.Sheets[ws_name2] = ws2;
+export const buildXLSX = async (form: IBuilderForm) => {
+  console.log("building xlsx", form);
+  // take form with survey data, convert to xlsx and write file to tmp location
 
-        // build settings sheet
-        const ws_name3 = 'settings';
-        const ws3: any = utils.json_to_sheet(form.settings);
-        wb.SheetNames.push(ws_name3);
-        wb.Sheets[ws_name3] = ws3;
+  // build survey sheet
+  const wsName = "survey";
+  const wb: WorkBook = { SheetNames: [], Sheets: {} };
+  const ws: any = utils.json_to_sheet(form.survey);
+  wb.SheetNames.push(wsName);
+  wb.Sheets[wsName] = ws;
+  // build choices sheet
+  const wsName2 = "choices";
+  const ws2: any = utils.json_to_sheet(form.choices);
+  wb.SheetNames.push(wsName2);
+  wb.Sheets[wsName2] = ws2;
+  // build settings sheet
+  const wsName3 = "settings";
+  const ws3: any = utils.json_to_sheet(form.settings);
+  wb.SheetNames.push(wsName3);
+  wb.Sheets[wsName3] = ws3;
+  // write data to xls file
+  let wbout;
+  try {
+    wbout = write(wb, { bookType: "xlsx", bookSST: true, type: "binary" });
+  } catch (error) {
+    throw error;
+  }
+  // write xls file to temp dir on file system
+  let fileName;
+  if (form._previewMode) {
+    fileName =
+      "_draft_" +
+      randomstring.generate({
+        // charset:'alphabetic',
+        length: 15
+      });
+  } else {
+    fileName = form.title;
+  }
+  const filePath = path.join(os.tmpdir(), fileName + ".xlsx");
+  console.log("writing file");
+  await fs.writeFile(filePath, wbout, "binary", err => {
+    if (err) {
+      throw err;
+    } else {
+      console.log("xlsx file written successfully");
+    }
+  });
+  console.log("resolving successfully", filePath);
+  return {
+    err: null,
+    filePath: filePath
+  };
+};
 
-
-        // write data to xls file
-        let wbout
-        try { wbout = write(wb, { bookType: 'xlsx', bookSST: true, type: 'binary' }); }
-        catch (error) { resolve('no form written') }
-        // write xls file to temp dir on file system
-        let fileName
-        if(form._previewMode){fileName='_draft_'+randomstring.generate({
-            // charset:'alphabetic',
-            length:15
-        })}
-        else{fileName = form.title}
-        const filePath = path.join(os.tmpdir(), fileName+'.xlsx')
-        fs.writeFile(filePath, wbout, 'binary', (err) => {
-            if (err) throw err;
-            else { console.log('xlsx file written successfully') }
-            resolve({
-                filePath:filePath,
-                err:err
-            })
-        })
-    })
-
-}
-
-export const buildCSV = function(json,filename) {
-    //convert the json file into a csv string:
-    
-    return new Promise((resolve,reject) => {
-
-        const parser = new Parser();
-
-        const csv = parser.parse(json);
-        const filePath = path.join(os.tmpdir(), filename)
-        fs.writeFile(filePath,csv,'binary',(err)=> {
-            if(err) throw err;
-            else console.log('csv file written successfully')
-            resolve({
-                filePath:filePath,
-                err:err
-            })
-
-        })
-    })
-}
+export const buildCSV = (json, filename) => {
+  // convert the json file into a csv string:
+  return new Promise((resolve, reject) => {
+    const parser = new Parser();
+    const csv = parser.parse(json);
+    const filePath = path.join(os.tmpdir(), filename);
+    fs.writeFile(filePath, csv, "binary", err => {
+      if (err) {
+        throw err;
+      } else {
+        console.log("csv file written successfully");
+      }
+      resolve({
+        filePath,
+        err
+      });
+    });
+  });
+};
 
 // *** rough interface for testing, to be properly defined
-export interface builderForm{
-    survey:any,
-    choices:any,
-    title:string,
-    settings:any,
-    _previewMode:boolean
+export interface IBuilderForm {
+  choices: any[];
+  questionGroups: any[];
+  survey: any[];
+  settings: any[];
+  title: string;
+  _created: string;
+  _previewMode: boolean;
 }

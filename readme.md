@@ -9,23 +9,28 @@ It extends the functionality of the https://kc.kobotoolbox.org/api/v1/ apis, all
 Running the app requires npm / node to be installed.
 
 On a server as a node app:
-1. Clone the repository into a folder on your server.
-2. Run `npm install` or `yarn` to install the node module dependancies
-3. Add your own config setting in config.dev.ts and config.prod.ts
-4. Run `npm start` to start the app on port 3000.
+
+1.  Clone the repository into a folder on your server.
+2.  Run `npm install` or `yarn` to install the node module dependancies
+3.  Add your own config setting in config.dev.ts and config.prod.ts
+4.  Run `npm start` to start the app on port 3000.
 
 On a firebase project using Firebase Functions:
 
 TODO: add setup instructions.
 
 Comments:
+
 * Make sure the port is accessible for GET, POST, PUT requests (probably via port forwarding through Nginx or Apache).
 
 TODO: add something about security / access / kobo accounts.
 
 ## Endpoints / Functions list:
-__TODO: add better explanations of functions__
+
+**TODO: add better explanations of functions**
+
 ### KoboAPi.ts
+
 * **getForms**: example function - just passes the request onto the kobo API.
 * **customDeployForm** - receives an XLSX Form in JSON format, builds it and deploys to kobo.
 * **customUpdateForm** - overwrites an existing form with a new XLSX form, received in JSON format.
@@ -39,25 +44,26 @@ __TODO: add better explanations of functions__
 * **shareForm**: _is pretty basic, could be extended by allowing many users to be added to one form, or one user to be added to many forms._ Shares a form (specified via req.body.form_id) with a user (specified by req.body.username) and grants a role (specified by req.body.role);
 
 ### collectedData.ts
-* **jsonPOST**: _no idea if this currently works..._ acts as a listener for JSON POST requests sent directly by Kobotools. Receives a JSON POST record and inserts it into a local database. 
+
+* **jsonPOST**: _no idea if this currently works..._ acts as a listener for JSON POST requests sent directly by Kobotools. Receives a JSON POST record and inserts it into a local database.
 
 **NOTE**: The jsonPOST function is a placeholder (and not well tested). It's setup to run with a postgresql database, but could be configured to do anything with the receiving data.
 
 TODO: write up the jsonPOST options using examples from various previous node apps that do the same thing.
 
 ### formBuilter.ts
+
 * **buildXLSX**: takes a JSON object containing a form definition (must include a survey, choices and settings object), and builds a complete xlsx file.
 * **buildCSV**: takes a JSON object (that should be 1 level deep) and turns the data into a csv file. Keys not present in every JSON entry will be included, with nulls for the rows that did not contain that key.
 
-
 ## Possible next features
+
 Investigate using kobotools 'projects' to easily share multiple forms with multiple users. This would involve functions to:
 
 * Add form(s) to a project
 * Remove form(s) from a project
 * Add user(s) to a project
 * Remove user(s) from a project
-
 
 ## Development notes
 
@@ -70,22 +76,33 @@ and: https://github.com/firebase/functions-samples/tree/master/typescript-gettin
 
 Note. Linting has been added on compile/deploy to flag issues, and is useful to pick up on common mistakes before deployment. To support windows environment `$RESOURCE_DIR` has been changed to `%RESOURCE_DIR%` in the main repo folder firebase.json. You may need to change back for linux environment
 
- - If the .eslintrc.json file is not pulled with github, you migth need to initialise it: `eslint --init`
+* If the .eslintrc.json file is not pulled with github, you migth need to initialise it: `eslint --init`
 
 ### Setting up ts compiling on Mac:
 
- - Ensure typescript is installed: `npm install -g typescript`
- - run `tsc -w` within the functions folder to set typescript to watch the folder and compile on save (it will watch the `src` folder, as defined by the tsconfig.json file);
- 
+* Ensure typescript is installed: `npm install -g typescript`
+* run `tsc -w` within the functions folder to set typescript to watch the folder and compile on save (it will watch the `src` folder, as defined by the tsconfig.json file);
 
 ### Converting functions code to run as Node app (not on Firebase)
- - Added "app.listsn()" directive to the main index.ts tile.
- - Run `node lib/index.js` to run node app.
+
+* Added "app.listsn()" directive to the main index.ts tile.
+* Run `node lib/index.js` to run node app.
 
 Now, this can be run locally or deployed to a server to run (e.g. with pm2 for continuous running), like any other Node / express project.
 
 Note: in this config, you do not need to add the 'api' to the url when sending requests to the api. (As that's the name of the Firebase cloud function, but we're skipping that part when running on Node)
 
-
 ## Future development.
+
 This makes use of the https://kc.kobotoolbox.org/api/v1/ apis. Given the lack of updates and unclear / incomplete / sometimes incorrect documentation given for this API, this should probably be rewritten at some point to interact with the newer API (e.g. kf.kobotoolbox.org/assets/ ). But, for now, the older version works ok for what we're trying to achieve.
+
+## Contribution
+
+### Style
+
+The codebase uses tslint and prettier to help adopt consistent code styles.
+It is recommended you install a tslint plugin for a visual overview of any issues,
+and enable prettier to format on save
+Prettier: https://prettier.io/docs/en/editors.html
+TSLint (VsCode): https://marketplace.visualstudio.com/items?itemName=eg2.tslint
+TSLint (Atom): https://atom.io/packages/linter-tslint
