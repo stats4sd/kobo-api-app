@@ -1,18 +1,17 @@
 import * as chai from "chai";
-import * as dirtyChai from "dirty-chai";
 import * as mocha from "mocha";
 import * as formBuilder from "../src/formBuilder";
 const expect = chai.expect;
-chai.use(dirtyChai);
 
 // test if correctly piping through to kobo api, checking the /forms endpoint
 describe("form builder", () => {
   it("should build form from json", async () => {
-    formBuilder.buildXLSX(exampleForm);
     const res = await formBuilder.buildXLSX(exampleForm);
-    // whilst .exist is a property, use dirtyChai to turn into a function (with optional message)
-    // to allow chaining and avoid unused expression lint warnings
-    expect(res.filePath).to.exist('');
+    if (res.filePath) {
+      console.log(`file: ${res.filePath}`);
+      return true;
+    }
+    return false;
   });
 });
 
@@ -56,7 +55,7 @@ const exampleForm: formBuilder.IBuilderForm = {
       ]
     }
   ],
-  _created: "2018-05-24T08:29:31.224Z",
+  _created: new Date().toUTCString(),
   _previewMode: true,
   survey: [
     {
@@ -798,5 +797,9 @@ const exampleForm: formBuilder.IBuilderForm = {
       "": null
     }
   ],
-  settings: [{}]
+  settings: [
+    {
+      form_title: `TestForm - ${new Date().toUTCString()}`
+    }
+  ]
 };

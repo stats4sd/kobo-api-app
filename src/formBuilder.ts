@@ -11,7 +11,6 @@ Input requires a 'form' object, which contains keys for 'survey' and 'choices', 
 */
 
 export const buildXLSX = async (form: IBuilderForm) => {
-  console.log("building xlsx", form);
   // take form with survey data, convert to xlsx and write file to tmp location
 
   // build survey sheet
@@ -50,15 +49,11 @@ export const buildXLSX = async (form: IBuilderForm) => {
     fileName = form.title;
   }
   const filePath = path.join(os.tmpdir(), fileName + ".xlsx");
-  console.log("writing file");
   await fs.writeFile(filePath, wbout, "binary", err => {
     if (err) {
       throw err;
-    } else {
-      console.log("xlsx file written successfully");
     }
   });
-  console.log("resolving successfully", filePath);
   return {
     err: null,
     filePath: filePath
@@ -85,13 +80,22 @@ export const buildCSV = (json, filename) => {
   });
 };
 
-// *** rough interface for testing, to be properly defined
+//
 export interface IBuilderForm {
   choices: any[];
   questionGroups: any[];
   survey: any[];
-  settings: any[];
+  settings: ISettings[];
   title: string;
   _created: string;
   _previewMode: boolean;
+}
+
+interface ISettings {
+  form_title?: string;
+  form_id?: string;
+  public_key?: string;
+  submission_url?: string;
+  default_language?: string;
+  version?: string;
 }

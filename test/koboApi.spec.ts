@@ -12,8 +12,7 @@ describe("pipeRequest", () => {
       .request(app)
       .get("/forms")
       .then(res => {
-        console.log(`${res.body.body.length} forms returned`);
-        expect(res.status).eql(200);
+        expect(res.status, `${res.body.body.length} forms returned`).eql(200);
       });
   });
 });
