@@ -6,5 +6,6 @@
     "object-literal-sort-keys": false,
     "no-implicit-dependencies": false,
     "no-invalid-template-strings": false
-  }
+  },
+  "defaultSeverity": "warning"
 }
