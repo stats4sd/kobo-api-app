@@ -21,8 +21,6 @@ if (config.kobotoolbox.token !== "") {
 
 // standard function to redirect non-custom requests directly to kobo
 export const pipeRequest = (req, res) => {
-  // console.log('piping request', req.method, req.path)
-  // pipe requests directly to kobo api
   const options = _setOptions(req);
   _sendRequest(options, res);
 };
@@ -379,7 +377,7 @@ export function _setOptions(req, newPath?, newMethod?) {
     finalPath = req.path;
   }
 
-  const options = {
+  const options: request.Options = {
     method: newMethod ? newMethod : req.method,
     url: koboURL + finalPath,
     headers: req.headers
@@ -447,6 +445,39 @@ export function _sendRequest(options, res?) {
       }
     });
   });
+}
+
+// check for errors in initial request method and body, responding appropriately
+export function verifyRequest(
+  req: Request,
+  res: Response,
+  allowedMethods: string[],
+  expectedBodyFields?: string[]
+) {
+  // permitted method used
+  if (!allowedMethods.includes(req.method)) {
+    res.status(405).send(`${req.method} method not allowed`);
+    throw new Error(`${req.method} method not allowed`);
+  }
+  // correct body fields provided
+  if (expectedBodyFields) {
+    const errors = [];
+    if (!req.body) {
+      const expectedStr = expectedBodyFields.join(",");
+      res.status(400).send(`${expectedStr} fields expected`);
+      throw new Error(`${expectedStr} fields expected`);
+    }
+    expectedBodyFields.forEach(field => {
+      if (!req.body.hasOwnProperty(field)) {
+        errors.push(`${field} not specified`);
+      }
+    });
+    if (errors.length > 0) {
+      const errorsStr = errors.join(",");
+      res.status(400).send(`${errorsStr}`);
+      throw new Error(`${errorsStr}`);
+    }
+  }
 }
 
 interface IKoboForm {

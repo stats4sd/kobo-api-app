@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "lib": ["es6","dom"],
+    "lib": ["es7", "dom"],
     "module": "commonjs",
     "noImplicitReturns": false,
     "outDir": "lib",
@@ -8,11 +8,6 @@
     "target": "es6"
   },
   "compileOnSave": true,
-  "include": [
-    "src/*",
-    "config/*"
-  ],
-  "exclude": [
-    "test/*"
-  ]
+  "include": ["src/*", "config/*"],
+  "exclude": ["test/*"]
 }

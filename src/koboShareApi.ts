@@ -4,76 +4,112 @@ import * as request from "request";
 import { config } from "../config/config";
 import * as collectedData from "./collectedData";
 import * as builder from "./formBuilder";
-import { _sendRequest, _setOptions } from "./koboApi";
+import { _sendRequest, _setOptions, verifyRequest } from "./koboApi";
 
-// wrapper around kobo /projects post to avoid typing full user id path
+// wrapper around kobo /projects post (to avoid typing full user id path)
 export const customRegisterProject = async (req: Request, res: Response) => {
-  if (req.method === "POST") {
-    console.log("custom register project", req.body);
-    if (req.body && req.body.name && req.body.owner) {
-      const body: IRegisterProjectBody = req.body;
-      const options: request.Options = _setOptions(req, "/projects");
-      options.formData = {
-        name: body.name || null,
-        owner: `${config.kobotoolbox.server}/users/${body.owner || null}`
-      };
-      _sendRequest(options, res).catch(err => console.log("error", err));
-    } else {
-      res.status(400).send("bad request, make sure owner and name specified");
-    }
-  } else {
-    res.status(405).send(`${req.method} method not allowed`);
-  }
+  verifyRequest(req, res, ["POST"], ["name", "owner"]);
+  const body: IRegisterProjectBody = req.body;
+  const options: request.Options = _setOptions(req, "/projects");
+  options.formData = {
+    name: body.name || null,
+    owner: `${config.kobotoolbox.server}/users/${body.owner || null}`
+  };
+  _sendRequest(options, res).catch(err => console.log("error", err));
 };
 
 // wrapper around projects to lookup id from project name and delete
 // takes body {name:projectName}
 // alternatively could keep track of project ID numbers
 export const customDeleteProject = async (req: Request, res: Response) => {
-  if (req.method === "POST") {
-    const options: request.Options = _setOptions({}, "/projects", "GET");
-    const projectName = req.body.name;
-    if (!projectName) {
-      res.status(400).send("bad request, include name");
-    } else {
-      const getProjects: any = await _sendRequest(options);
-      const allProjects: IProject[] = JSON.parse(getProjects.body);
-      const toDelete = allProjects.find(p => {
-        return p.name === projectName;
-      });
-      if (toDelete) {
-        const newOptions = _setOptions(
-          {},
-          `/projects/${toDelete.projectid}`,
-          "DELETE"
-        );
-        _sendRequest(newOptions, res);
-      }
-    }
-  } else {
-    res.status(405).send(`${req.method} method not allowed`);
+  verifyRequest(req, res, ["POST"], ["name"]);
+  const body: IDeleteProjectBody = req.body;
+  const options: request.Options = _setOptions({}, "/projects", "GET");
+  const projectName = req.body.name;
+  const projectToDelete = await getProjectByName(projectName);
+  if (projectToDelete) {
+    const newOptions = _setOptions(
+      {},
+      `/projects/${projectToDelete.projectid}`,
+      "DELETE"
+    );
+    _sendRequest(newOptions, res);
   }
 };
 
-// import list of usernames into project
+// takes array of user objects (interface below) and adds to project, returning
+// a list of all project users after operation
+export const customAddUsersToProject = async (req: Request, res: Response) => {
+  verifyRequest(req, res, ["POST"], ["users", "project"]);
+  const body: IAddUsersBody = req.body;
+  const projectName = body.project;
+  let project = await getProjectByName(projectName);
+  if (!project) {
+    res.status(400).send("project not found");
+  } else {
+    const options = _setOptions(
+      {},
+      `/projects/${project.projectid}/share`,
+      "PUT"
+    );
+    // main loop to sequentially add user to project
+    for (const user of body.users) {
+      options.formData = {
+        username: user.username,
+        role: user.role
+      };
+      await _sendRequest(options);
+    }
+    project = await getProjectByName(projectName);
+    // *** returns current project users array in all cases (even if operation not successful)
+    // additional validation needed client-side (see example in test)
+    res.status(200).send(project.users);
+  }
+};
 
-// import list of forms into project
+// add form to project
 
-// remove list of users from project
+// remove user from project
 
-// remove list of forms from project
+// remove form from project
 
-interface IRegisterProjectBody {
+/************ Helper functions ****************************************************
+These are used internally to do common tasks like setting request options and
+sending requests
+************************************************************************************/
+async function getProjectByName(projectName: string) {
+  const options: request.Options = _setOptions({}, "/projects", "GET");
+  const getProjects: any = await _sendRequest(options);
+  const allProjects: IProject[] = JSON.parse(getProjects.body);
+  const project = allProjects.find(p => {
+    return p.name === projectName;
+  });
+  return project;
+}
+
+/************ Interfaces ***********************************************************
+These help to define the expected data structures
+************************************************************************************/
+
+// enpoint request bodies, exported to be available to test
+export interface IRegisterProjectBody {
   owner: string;
   name: string;
 }
-
-interface IRequestBody {
+export interface IDeleteProjectBody {
+  name: string;
+}
+export interface IAddUsersBody {
+  users: IAddUsersBodyUser[];
+  project: string;
+}
+export interface IAddUsersBodyUser {
   username: string;
-  role: string;
+  role: "readonly" | "dataentry" | "editor" | "manager";
 }
 
-interface IProject {
+// kobo api repsponses
+export interface IProject {
   url: string;
   projectid: number;
   owner: string;
@@ -92,7 +128,7 @@ interface IProject {
   date_modified: string;
 }
 
-interface IProjectUsers {
+export interface IProjectUsers {
   role: string;
   user: string;
   permissions: string[];
