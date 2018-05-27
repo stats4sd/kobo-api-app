@@ -2,20 +2,20 @@ import { Request, Response } from "express";
 import * as fs from "fs";
 import * as request from "request";
 import { config } from "../config/config";
-import * as collectedData from "./collectedData";
 import * as builder from "./formBuilder";
-import { _sendRequest, _setOptions, verifyRequest } from "./koboApi";
+import { sendRequest, setRequestOptions, verifyRequest } from "./koboApi";
+import * as postgresApi from "./postgresApi";
 
 // wrapper around kobo /projects post (to avoid typing full user id path)
 export const customRegisterProject = async (req: Request, res: Response) => {
   verifyRequest(req, res, ["POST"], ["name", "owner"]);
   const body: IRegisterProjectBody = req.body;
-  const options: request.Options = _setOptions(req, "/projects");
+  const options: request.Options = setRequestOptions(req, "/projects");
   options.formData = {
     name: body.name || null,
     owner: `${config.kobotoolbox.server}/users/${body.owner || null}`
   };
-  _sendRequest(options, res).catch(err => console.log("error", err));
+  sendRequest(options, res).catch(err => console.log("error", err));
 };
 
 // wrapper around projects to lookup id from project name and delete
@@ -24,16 +24,16 @@ export const customRegisterProject = async (req: Request, res: Response) => {
 export const customDeleteProject = async (req: Request, res: Response) => {
   verifyRequest(req, res, ["POST"], ["name"]);
   const body: IDeleteProjectBody = req.body;
-  const options: request.Options = _setOptions({}, "/projects", "GET");
+  const options: request.Options = setRequestOptions({}, "/projects", "GET");
   const projectName = req.body.name;
   const projectToDelete = await getProjectByName(projectName);
   if (projectToDelete) {
-    const newOptions = _setOptions(
+    const newOptions = setRequestOptions(
       {},
       `/projects/${projectToDelete.projectid}`,
       "DELETE"
     );
-    _sendRequest(newOptions, res);
+    sendRequest(newOptions, res);
   }
 };
 
@@ -47,7 +47,7 @@ export const customAddUsersToProject = async (req: Request, res: Response) => {
   if (!project) {
     res.status(400).send("project not found");
   } else {
-    const options = _setOptions(
+    const options = setRequestOptions(
       {},
       `/projects/${project.projectid}/share`,
       "PUT"
@@ -58,7 +58,7 @@ export const customAddUsersToProject = async (req: Request, res: Response) => {
         username: user.username,
         role: user.role
       };
-      await _sendRequest(options);
+      await sendRequest(options);
     }
     project = await getProjectByName(projectName);
     // *** returns current project users array in all cases (even if operation not successful)
@@ -78,8 +78,8 @@ These are used internally to do common tasks like setting request options and
 sending requests
 ************************************************************************************/
 async function getProjectByName(projectName: string) {
-  const options: request.Options = _setOptions({}, "/projects", "GET");
-  const getProjects: any = await _sendRequest(options);
+  const options: request.Options = setRequestOptions({}, "/projects", "GET");
+  const getProjects: any = await sendRequest(options);
   const allProjects: IProject[] = JSON.parse(getProjects.body);
   const project = allProjects.find(p => {
     return p.name === projectName;
@@ -140,14 +140,14 @@ export interface IProjectUsers {
 //     const formId = req.body.form_id.toString();
 //     const username = req.body.username;
 //     const role = req.body.role;
-//     const options: any = _setOptions(req, "forms/" + formId + "/share");
+//     const options: any = setRequestOptions(req, "forms/" + formId + "/share");
 //     // add specific options:
 //     options.formData = {
 //       username: username,
 //       role: role
 //     };
 //     try {
-//       const sendback = await _sendRequest(options, res);
+//       const sendback = await sendRequest(options, res);
 //     } catch (error) {
 //       res.status(500).send("there was an error");
 //     }

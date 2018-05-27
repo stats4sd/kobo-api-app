@@ -6,6 +6,7 @@ import * as fs from "fs";
 import { Client, Pool } from "pg";
 import * as request from "request";
 import { config } from "../config/config";
+import { getLatestSubmissions, IPullDataBody } from "./koboExportApi";
 
 // Connect to postgres local db
 const pool = new Pool({
@@ -19,7 +20,24 @@ const pool = new Pool({
 const koboURL = config.kobotoolbox.server;
 const auth = "Basic" + config.kobotoolbox.token;
 
-export const jsonPOST = (req, res?) => {
+// check postgres records for a given form and compare to kobo,
+// pull missing records and update accordingly
+export const postgresUpdateForm = async (req, res) => {
+  const body: IPullDataBody = req.body;
+  const pullDataRes = await getLatestSubmissions(
+    body.formID,
+    body.latestSubmissionID
+  );
+  for (const record of pullDataRes.data) {
+    const upload = await postgresJsonPOST({
+      method: "POST",
+      body: record
+    });
+  }
+  res.send(pullDataRes);
+};
+
+export const postgresJsonPOST = async (req, res?) => {
   console.log("receiving data from json POST", req.method, req.path);
   switch (req.method) {
     case "GET":

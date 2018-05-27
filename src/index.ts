@@ -1,14 +1,14 @@
 // node module imports
-import * as express from "express";
 import * as bodyParser from "body-parser";
 import * as cors from "cors";
-
+import * as express from "express";
 import * as functions from "firebase-functions";
 
 // custom module imports
 import { config } from "../config/config";
-import * as collectedData from "./collectedData";
+import * as postgresApi from "./postgresApi";
 import * as kobo from "./koboApi";
+import * as koboExport from "./koboExportApi";
 import * as koboShare from "./koboShareApi";
 
 const app = express();
@@ -40,10 +40,12 @@ app.all("*", (req, res, next) => {
 
   if (kobo[endpoint]) {
     kobo[endpoint](req, res);
-  } else if (collectedData[endpoint]) {
-    collectedData[endpoint](req, res);
+  } else if (postgresApi[endpoint]) {
+    postgresApi[endpoint](req, res);
   } else if (koboShare[endpoint]) {
     koboShare[endpoint](req, res);
+  } else if (koboExport[endpoint]) {
+    koboExport[endpoint](req, res);
   } else {
     // otherwise pass to kobo native api
     kobo.pipeRequest(req, res);
