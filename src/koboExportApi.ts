@@ -22,6 +22,7 @@ export async function getLatestSubmissions(
   formID: number,
   latestSubmissionID?
 ) {
+  // get data from /data/{pk} endpoint
   const options: request.Options = setRequestOptions(
     {},
     "/data/" + formID,
@@ -47,82 +48,6 @@ export async function getLatestSubmissions(
     countNew: countNew
   };
   return pullDataRes;
-}
-
-// ******************************** To be organised **************************************
-
-export const addCsv = (req, res) => {
-  if (req.method === "POST") {
-    const dataType = req.body.data_type;
-    const dataValue = req.body.data_value;
-    const xform = req.body.xform;
-    const dataFile = req.body.data_file;
-
-    // first,  check if the form already has an attached file with the given name.
-    const checkOptions: any = setRequestOptions(req, "metadata?xform=" + xform);
-    checkOptions.method = "GET";
-
-    sendRequest(checkOptions).then((checkBack: any) => {
-      console.log("checkback", checkBack);
-      const metaData = JSON.parse(checkBack.body);
-      let url = "";
-      const fileExists: boolean = metaData.some((item, index) => {
-        url = item.url;
-        return (item.data_value = dataValue);
-      });
-
-      if (fileExists) {
-        const deleteOptions = setRequestOptions(req);
-        deleteOptions.method = "DELETE";
-        deleteOptions.url = url;
-
-        sendRequest(deleteOptions).then(deleteBack => {
-          uploadCsv(req, res);
-        });
-      } else {
-        uploadCsv(req, res);
-      }
-      console.log("#####");
-      console.log("url = ", url);
-      console.log("#####");
-    });
-  } else {
-    res.status(405).send(req.method + " method not allowed");
-  }
-};
-
-async function uploadCsv(req, res) {
-  // convert data_file to csv;
-  const dataType = req.body.data_type;
-  const dataValue = req.body.data_value;
-  const xform = req.body.xform;
-  const dataFile = req.body.data_file;
-
-  const filePath: string = await builder.buildCSV(dataFile, dataValue);
-  const options: any = setRequestOptions(req, "metadata");
-
-  options.formData = {
-    data_type: dataType,
-    data_value: dataValue,
-    xform: xform,
-    data_file: fs.createReadStream(filePath)
-  };
-
-  sendRequest(options).then((sendBack: any) => {
-    let msg: any;
-    try {
-      msg = JSON.parse(sendBack.body);
-    } catch (error) {
-      msg = {
-        body: sendBack.body,
-        err: error
-      };
-    }
-    res.send({
-      responseCode: sendBack.responseCodes,
-      msg: msg
-    });
-  }); // end sendRequest
 }
 
 /************ Helper functions ****************************************************
