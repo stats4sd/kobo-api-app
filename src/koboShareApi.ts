@@ -29,7 +29,7 @@ export const customDeleteProject = async (req: Request, res: Response) => {
   const projectToDelete = await getProjectByName(projectName);
   if (projectToDelete) {
     const newOptions = setRequestOptions(
-      {},
+      null,
       `/projects/${projectToDelete.projectid}`,
       "DELETE"
     );
@@ -48,7 +48,7 @@ export const customAddUsersToProject = async (req: Request, res: Response) => {
     res.status(400).send("project not found");
   } else {
     const options = setRequestOptions(
-      {},
+      null,
       `/projects/${project.projectid}/share`,
       "PUT"
     );
