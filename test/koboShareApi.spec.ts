@@ -10,6 +10,8 @@ import * as koboShareApi from "../src/koboShareApi";
 chai.use(chaiHttp);
 const expect = chai.expect;
 
+let projectid;
+
 describe("create project", () => {
   it("should create new project", done => {
     if (config.kobotoolbox.username === "") {
@@ -20,6 +22,9 @@ describe("create project", () => {
         .post("/customRegisterProject")
         .send({ owner: config.kobotoolbox.username, name: testProjectName })
         .end((err, res) => {
+          console.log("project created", res.body.body);
+          projectid = res.body.body.projectid;
+          console.log("projectid", projectid);
           expect(res.body.body.name).to.eql(testProjectName);
           done();
         });
@@ -32,13 +37,16 @@ describe("add users to project", () => {
     if (config.kobotoolbox.username === "") {
       throw new Error("no user provided in config");
     } else {
+      const testProject = addUsersTestData;
+      testProject.projectid = projectid;
       chai
         .request(app)
         .post("/customAddUsersToProject")
-        .send(addUsersTestData)
+        .send(testProject)
         .end((err, res) => {
           // *** need to take a closer look at response objects to see if actually successful or not
           const allUsers: koboShareApi.IProjectUsers[] = res.body;
+          console.log("project users", allUsers);
           const allUsersLists = allUsers.map(u => {
             return u.user;
           });
@@ -57,12 +65,13 @@ describe("delete project", () => {
     if (config.kobotoolbox.username === "") {
       throw new Error("no user provided in config");
     } else {
+      console.log("deleting project", projectid);
       chai
         .request(app)
-        .post("/customDeleteProject")
-        .send({ name: testProjectName })
-        .end((err, res) => {
-          expect(res, JSON.stringify(res.body)).to.have.status(200);
+        .del(`/projects/${projectid}`)
+        .then(res => {
+          console.log("project deleted", res.body);
+          expect(res.body.statusCode).to.have.status(200);
           done();
         });
     }
@@ -84,5 +93,5 @@ const testProjectName = `project-${randomstring.generate({
 // *** would be better to setup more dummy accounts to test different roles too
 const addUsersTestData: koboShareApi.IAddUsersBody = {
   users: [{ username: "stats4sd_demos", role: "editor" }],
-  project: testProjectName
+  projectid: null
 };

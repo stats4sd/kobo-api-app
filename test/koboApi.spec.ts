@@ -42,7 +42,7 @@ describe("deploy custom json form", () => {
   });
 });
 
-describe("deploy delete form", () => {
+describe("delete deployed form", () => {
   it("should delete created form", () => {
     return chai
       .request(app)

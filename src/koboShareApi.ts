@@ -10,7 +10,7 @@ import * as postgresApi from "./postgresApi";
 export const customRegisterProject = async (req: Request, res: Response) => {
   verifyRequest(req, res, ["POST"], ["name", "owner"]);
   const body: IRegisterProjectBody = req.body;
-  const options: request.Options = setRequestOptions(req, "/projects");
+  const options: request.Options = setRequestOptions(req, "projects");
   options.formData = {
     name: body.name || null,
     owner: `${config.kobotoolbox.server}/users/${body.owner || null}`
@@ -18,57 +18,32 @@ export const customRegisterProject = async (req: Request, res: Response) => {
   sendRequest(options, res).catch(err => console.log("error", err));
 };
 
-// wrapper around projects to lookup id from project name and delete
-// takes body {name:projectName}
-// alternatively could keep track of project ID numbers
-export const customDeleteProject = async (req: Request, res: Response) => {
-  verifyRequest(req, res, ["POST"], ["name"]);
-  const body: IDeleteProjectBody = req.body;
-  const options: request.Options = setRequestOptions(null, "/projects", "GET");
-  const projectName = req.body.name;
-  const projectToDelete = await getProjectByName(projectName);
-  if (projectToDelete) {
-    const newOptions = setRequestOptions(
-      null,
-      `/projects/${projectToDelete.projectid}`,
-      "DELETE"
-    );
-    sendRequest(newOptions, res);
-  }
-};
-
 // takes array of user objects (interface below) and adds to project, returning
 // a list of all project users after operation
 export const customAddUsersToProject = async (req: Request, res: Response) => {
-  verifyRequest(req, res, ["POST"], ["users", "project"]);
+  verifyRequest(req, res, ["POST"], ["users", "projectid"]);
   const body: IAddUsersBody = req.body;
-  const projectName = body.project;
-  let project = await getProjectByName(projectName);
-  if (!project) {
-    res.status(400).send("project not found");
-  } else {
-    const options = setRequestOptions(
-      null,
-      `/projects/${project.projectid}/share`,
-      "PUT"
-    );
-    // main loop to sequentially add user to project
-    for (const user of body.users) {
-      options.formData = {
-        username: user.username,
-        role: user.role
-      };
-      await sendRequest(options);
-    }
-    project = await getProjectByName(projectName);
-    // *** returns current project users array in all cases (even if operation not successful)
-    // additional validation needed client-side (see example in test)
-    res.status(200).send(project.users);
+  const projectid = body.projectid;
+  console.log("adding users", body);
+  const options = setRequestOptions(
+    null,
+    `/projects/${projectid}/share`,
+    "PUT"
+  );
+  // main loop to sequentially add user to project
+  for (const user of body.users) {
+    options.formData = {
+      username: user.username,
+      role: user.role
+    };
+    await sendRequest(options);
   }
+  const updatedProject: IProject = await getProjectByID(projectid);
+  console.log("updated project", updatedProject);
+  // *** returns current project users array in all cases (even if operation not successful)
+  // additional validation needed client-side (see example in test)
+  res.status(200).send(updatedProject.users);
 };
-
-// add forms to project (by name)
-// (not currently required as done individuallyi with project id number and /projects/{pk}/forms POST request)
 
 // remove user from project
 
@@ -79,12 +54,25 @@ These are used internally to do common tasks like setting request options and
 sending requests
 ************************************************************************************/
 async function getProjectByName(projectName: string) {
-  const options: request.Options = setRequestOptions(null, "/projects", "GET");
+  const options: request.Options = setRequestOptions(null, "projects", "GET");
   const getProjects: any = await sendRequest(options);
   const allProjects: IProject[] = JSON.parse(getProjects.body);
   const project = allProjects.find(p => {
     return p.name === projectName;
   });
+  return project;
+}
+
+// request project by id and parse response to return an IProject object
+async function getProjectByID(projectid: number) {
+  const options: request.Options = setRequestOptions(
+    null,
+    `projects/${projectid}`,
+    "GET"
+  );
+  const projectRequest = (await sendRequest(options)) as Request;
+  const project: IProject = JSON.parse(projectRequest.body);
+  console.log("project", project);
   return project;
 }
 
@@ -98,11 +86,11 @@ export interface IRegisterProjectBody {
   name: string;
 }
 export interface IDeleteProjectBody {
-  name: string;
+  projectid: number;
 }
 export interface IAddUsersBody {
   users: IAddUsersBodyUser[];
-  project: string;
+  projectid: number;
 }
 export interface IAddUsersBodyUser {
   username: string;
@@ -135,25 +123,3 @@ export interface IProjectUsers {
   user: string;
   permissions: string[];
 }
-
-// // share one form with one user
-// export const shareForm = async (req: IShareRequest, res) => {
-//   if (req.method === "POST") {
-//     const formId = req.body.form_id.toString();
-//     const username = req.body.username;
-//     const role = req.body.role;
-//     const options: any = setRequestOptions(req, "forms/" + formId + "/share");
-//     // add specific options:
-//     options.formData = {
-//       username: username,
-//       role: role
-//     };
-//     try {
-//       const sendback = await sendRequest(options, res);
-//     } catch (error) {
-//       res.status(500).send("there was an error");
-//     }
-//   } else {
-//     res.status(405).send(req.method + " method not allowed");
-//   }
-// };

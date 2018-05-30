@@ -43,7 +43,7 @@ export const getForms = (req, res) => {
 };
 
 export const customDeployForm = async (req: Request, res: Response) => {
-  verifyRequest(req, res, ["POST"], ["choices", "title", "survey"]);
+  verifyRequest(req, res, ["POST"], ["choices", "survey"]);
   const form: builder.IBuilderForm = req.body;
   const build = await builder.buildXLSX(form);
   const filePath: string = build.filePath;
