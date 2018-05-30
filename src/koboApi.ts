@@ -42,30 +42,17 @@ export const getForms = (req, res) => {
   }
 };
 
-// Receives JSON form data, builds form and deploys to kobo
 export const customDeployForm = async (req: Request, res: Response) => {
-  if (req.method === "POST") {
-    const form = req.body;
-    // build form and send request to kobo forms api, returning forms object
-    const build = await builder.buildXLSX(form);
-    const filePath: string = build.filePath;
-    const options: any = setRequestOptions(req, "forms");
-    // add formData to standard options object
-    options.formData = {
-      xls_file: fs.createReadStream(filePath)
-    };
-    // example intercepting standard response object from sendRequest function
-    // probably not necessary as sending same form back that was sent (more for dev)
-    const sendback: any = await sendRequest(options);
-    const msg = JSON.parse(sendback.body);
-    res.send({
-      form: form,
-      msg: msg,
-      responseCode: sendback.responseCodes
-    });
-  } else {
-    res.status(405).send(req.method + " method not allowed");
-  }
+  verifyRequest(req, res, ["POST"], ["choices", "title", "survey"]);
+  const form: builder.IBuilderForm = req.body;
+  const build = await builder.buildXLSX(form);
+  const filePath: string = build.filePath;
+  const options: request.Options = setRequestOptions(req, "forms");
+  // add formData to standard options object
+  options.formData = {
+    xls_file: fs.createReadStream(filePath)
+  };
+  sendRequest(options, res);
 };
 
 // Combination of customDeployForm above and customSetFormInfo code below
@@ -76,9 +63,11 @@ export const customUpdateForm = (req, res) => {
     // build form and send request to kobo forms api, returning forms object
     builder.buildXLSX(form).then(build => {
       const filePath: string = build.filePath;
-      const options: any = setRequestOptions(req, "forms/" + form.kobo_id);
+      const options: any = setRequestOptions(req, `forms/${form.kobo_id}`);
       options.formData = {
-        xls_file: fs.createReadStream(filePath)
+        xls_file: {
+          value: fs.createReadStream(filePath)
+        }
       };
       sendRequest(options).then(body => {
         res.send({
@@ -97,7 +86,7 @@ export const customUpdateForm = (req, res) => {
 export const customSetFormInfo = (req, res, update?, urlToReplace?) => {
   if (req.method === "PATCH") {
     console.log("archive req body", req.body);
-    const options: any = setRequestOptions(req, "forms/" + req.body.kobo_id);
+    const options: any = setRequestOptions(req, `forms/${req.body.kobo_id}`);
     // add form data using either supplied or body
     if (!update) {
       console.log("setting body as form", req.body, typeof req.body);
@@ -238,17 +227,21 @@ These are used internally to do common tasks like setting request options and
 sending requests
 ************************************************************************************/
 
-export function setRequestOptions(req, newPath?, newMethod?) {
+export function setRequestOptions(req: Request, newPath?: string, newMethod?) {
   // headers sent by WordPress are getting in the way. Instead, reset headers and build custom set:
   req.headers = {};
   // add authorization - currently admin-only, will be passed from WordPress soon
   req.headers.authorization = auth;
   // req.headers.origin = "api.stats4sdtest.online"
   // req.headers.host = "stats4sdtest.online"
-  let finalPath = newPath;
+  let finalPath: string = newPath;
   // set options for method, url and headers, including any path update
   if (!newPath) {
     finalPath = req.path;
+  }
+  // check path starts '/' in case not set in config
+  if (finalPath.charAt(0) !== "/") {
+    finalPath = `/${finalPath}`;
   }
   const options: request.Options = {
     method: newMethod ? newMethod : req.method,
@@ -340,7 +333,7 @@ export function verifyRequest(
       throw new Error(`${expectedStr} fields expected`);
     }
     expectedBodyFields.forEach(field => {
-      if (!req.body.hasOwnProperty(field)) {
+      if (!req.body[field]) {
         errors.push(`${field} not specified`);
       }
     });

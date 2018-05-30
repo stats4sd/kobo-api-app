@@ -15,48 +15,9 @@ describe("form builder", () => {
   });
 });
 
-// *** rough template, needs to be formatted correctly for test to pass
-const exampleForm: formBuilder.IBuilderForm = {
+export const exampleForm: formBuilder.IBuilderForm = {
   title: `TestForm - ${new Date().toUTCString()}`,
-  questionGroups: [
-    {
-      _id: "at1grp1",
-      _created: "2018-01-30T22:44:28.607Z",
-      _modified: "2018-01-30T22:44:28.607Z",
-      tags: [null],
-      label: "Demographic and General Initial Questions",
-      questions: [
-        "nr1",
-        "nr2",
-        "nr3",
-        "nr4",
-        "nr4s",
-        "nr5",
-        "nr6",
-        "nr7",
-        "nr8",
-        "nr626",
-        "nr627",
-        "nr654",
-        "nr655",
-        "nr656",
-        "nr657",
-        "nr658",
-        "nr659",
-        "nr660",
-        "nr661",
-        "nr662",
-        "nr663",
-        "nr664",
-        "nr665",
-        "nr666",
-        "nr634",
-        "nr632"
-      ]
-    }
-  ],
   _created: new Date().toUTCString(),
-  _previewMode: true,
   survey: [
     {
       type: "begin group",
@@ -529,272 +490,238 @@ const exampleForm: formBuilder.IBuilderForm = {
       name: "male",
       label: "Male",
       image: null,
-      "label::language1": null,
-      "": null
+      "label::language1": null
     },
     {
       list_name: "nr2",
       name: "female",
       label: "Female",
       image: null,
-      "label::language1": null,
-      "": null
+      "label::language1": null
     },
     {
       list_name: "nr4",
       name: "spouse",
       label: "Spouse",
       image: null,
-      "label::language1": null,
-      "": null
+      "label::language1": null
     },
     {
       list_name: "nr4",
       name: "daughterson",
       label: "Daughter/Son",
       image: null,
-      "label::language1": null,
-      "": null
+      "label::language1": null
     },
     {
       list_name: "nr4",
       name: "self",
       label: "Self",
       image: null,
-      "label::language1": null,
-      "": null
+      "label::language1": null
     },
     {
       list_name: "nr4",
       name: "sisterbrother",
       label: "Sister/Brother",
       image: null,
-      "label::language1": null,
-      "": null
+      "label::language1": null
     },
     {
       list_name: "nr4",
       name: "motherfather",
       label: "Mother/Father",
       image: null,
-      "label::language1": null,
-      "": null
+      "label::language1": null
     },
     {
       list_name: "nr4",
       name: "grandchild",
       label: "Grandchild",
       image: null,
-      "label::language1": null,
-      "": null
+      "label::language1": null
     },
     {
       list_name: "nr4",
       name: "fosterchild",
       label: "Foster Child",
       image: null,
-      "label::language1": null,
-      "": null
+      "label::language1": null
     },
     {
       list_name: "nr4",
       name: "cowife",
       label: "Co-Wife",
       image: null,
-      "label::language1": null,
-      "": null
+      "label::language1": null
     },
     {
       list_name: "nr4",
       name: "servantlivein",
       label: "Servant Live-In",
       image: null,
-      "label::language1": null,
-      "": null
+      "label::language1": null
     },
     {
       list_name: "nr4",
       name: "other",
       label: "Other (specify)",
       image: null,
-      "label::language1": null,
-      "": null
+      "label::language1": null
     },
     {
       list_name: "nr6",
       name: "male",
       label: "Male",
       image: null,
-      "label::language1": null,
-      "": null
+      "label::language1": null
     },
     {
       list_name: "nr6",
       name: "female",
       label: "Female",
       image: null,
-      "label::language1": null,
-      "": null
+      "label::language1": null
     },
     {
       list_name: "nr8",
       name: "single",
       label: "Single",
       image: null,
-      "label::language1": null,
-      "": null
+      "label::language1": null
     },
     {
       list_name: "nr8",
       name: "married",
       label: "Married",
       image: null,
-      "label::language1": null,
-      "": null
+      "label::language1": null
     },
     {
       list_name: "nr8",
       name: "widowwidower",
       label: "Widow/Widower",
       image: null,
-      "label::language1": null,
-      "": null
+      "label::language1": null
     },
     {
       list_name: "nr8",
       name: "divorcedseparated",
       label: "Divorced/Separated",
       image: null,
-      "label::language1": null,
-      "": null
+      "label::language1": null
     },
     {
       list_name: "nr626",
       name: "yes",
       label: "Yes",
       image: null,
-      "label::language1": null,
-      "": null
+      "label::language1": null
     },
     {
       list_name: "nr626",
       name: "no",
       label: "No",
       image: null,
-      "label::language1": null,
-      "": null
+      "label::language1": null
     },
     {
       list_name: "nr634",
       name: "agriculture",
       label: "Agriculture",
       image: null,
-      "label::language1": null,
-      "": null
+      "label::language1": null
     },
     {
       list_name: "nr634",
       name: "livestock",
       label: "livestock",
       image: null,
-      "label::language1": null,
-      "": null
+      "label::language1": null
     },
     {
       list_name: "nr634",
       name: "fishing",
       label: "Fishing",
       image: null,
-      "label::language1": null,
-      "": null
+      "label::language1": null
     },
     {
       list_name: "nr634",
       name: "wildfood",
       label: "Wild_food",
       image: null,
-      "label::language1": null,
-      "": null
+      "label::language1": null
     },
     {
       list_name: "nr634",
       name: "firewood",
       label: "Firewood",
       image: null,
-      "label::language1": null,
-      "": null
+      "label::language1": null
     },
     {
       list_name: "nr634",
       name: "handicraft",
       label: "Handicraft",
       image: null,
-      "label::language1": null,
-      "": null
+      "label::language1": null
     },
     {
       list_name: "nr634",
       name: "petty-trade",
       label: "Petty-Trade",
       image: null,
-      "label::language1": null,
-      "": null
+      "label::language1": null
     },
     {
       list_name: "nr634",
       name: "wholesale",
       label: "Wholesale",
       image: null,
-      "label::language1": null,
-      "": null
+      "label::language1": null
     },
     {
       list_name: "nr634",
       name: "transport",
       label: "Transport",
       image: null,
-      "label::language1": null,
-      "": null
+      "label::language1": null
     },
     {
       list_name: "nr634",
       name: "salary",
       label: "Salary",
       image: null,
-      "label::language1": null,
-      "": null
+      "label::language1": null
     },
     {
       list_name: "nr632",
       name: "refugees",
       label: "Refugees",
       image: null,
-      "label::language1": null,
-      "": null
+      "label::language1": null
     },
     {
       list_name: "nr632",
       name: "internally",
       label: "Internally Displaced Persons",
       image: null,
-      "label::language1": null,
-      "": null
+      "label::language1": null
     },
     {
       list_name: "nr632",
       name: "host",
       label: "Host Community",
       image: null,
-      "label::language1": null,
-      "": null
+      "label::language1": null
     },
     {
       list_name: "nr632",
       name: "returning",
       label: "Returning Refugees",
       image: null,
-      "label::language1": null,
-      "": null
+      "label::language1": null
     }
   ],
   settings: [

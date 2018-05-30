@@ -18,6 +18,7 @@ export const customPullData = async (req: Request, res: Response) => {
   res.status(200).send(pullDataRes);
 };
 
+// This is not an endpoint, but used by various endpoints to pull form submissions
 export async function getLatestSubmissions(
   formID: number,
   latestSubmissionID?

@@ -34,15 +34,16 @@ export const buildXLSX = async (form: IBuilderForm) => {
   try {
     wbout = write(wb, { bookType: "xlsx", bookSST: true, type: "binary" });
   } catch (error) {
+    console.log("wbout error", error);
     throw error;
   }
   // write xls file to temp dir on file system
   let fileName;
-  if (form._previewMode) {
+  if (!form.title) {
     fileName =
-      "_draft_" +
+      "untitled-" +
       randomstring.generate({
-        // charset:'alphabetic',
+        charset: "alphabetic",
         length: 15
       });
   } else {
@@ -80,12 +81,10 @@ export const buildCSV = (json, filename) => {
 //
 export interface IBuilderForm {
   choices: any[];
-  questionGroups: any[];
   survey: any[];
-  settings: ISettings[];
+  settings?: ISettings[];
   title: string;
-  _created: string;
-  _previewMode: boolean;
+  _created?: string;
 }
 
 interface ISettings {

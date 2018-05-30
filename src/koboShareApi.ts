@@ -67,7 +67,8 @@ export const customAddUsersToProject = async (req: Request, res: Response) => {
   }
 };
 
-// add form to project
+// add forms to project (by name)
+// (not currently required as done individuallyi with project id number and /projects/{pk}/forms POST request)
 
 // remove user from project
 
@@ -106,6 +107,7 @@ export interface IAddUsersBody {
 export interface IAddUsersBodyUser {
   username: string;
   role: "readonly" | "dataentry" | "editor" | "manager";
+  remove?:boolean
 }
 
 // kobo api repsponses

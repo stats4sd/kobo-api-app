@@ -12,6 +12,8 @@
     "test": "mocha -r ts-node/register test/*.ts --inspect || exit 0",
     "test:export":
       "mocha -r ts-node/register test/koboExportApi.spec.ts --inspect || exit 0",
+    "test:api":
+      "mocha -r ts-node/register test/koboApi.spec.ts --inspect || exit 0",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log"
   },
