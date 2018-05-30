@@ -25,7 +25,7 @@ export async function getLatestSubmissions(
 ) {
   // get data from /data/{pk} endpoint
   const options: request.Options = setRequestOptions(
-    {},
+    null,
     "/data/" + formID,
     "GET"
   );

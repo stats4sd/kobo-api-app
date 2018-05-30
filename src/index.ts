@@ -6,10 +6,10 @@ import * as functions from "firebase-functions";
 
 // custom module imports
 import { config } from "../config/config";
-import * as postgresApi from "./postgresApi";
 import * as kobo from "./koboApi";
 import * as koboExport from "./koboExportApi";
 import * as koboShare from "./koboShareApi";
+import * as postgresApi from "./postgresApi";
 
 const app = express();
 
