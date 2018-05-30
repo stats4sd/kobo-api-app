@@ -1,6 +1,5 @@
 import * as chai from "chai";
 import * as mocha from "mocha";
-import * as randomstring from "randomstring";
 import * as formBuilder from "../src/formBuilder";
 const expect = chai.expect;
 
@@ -17,11 +16,6 @@ describe("form builder", () => {
 });
 
 export const exampleForm: formBuilder.IBuilderForm = {
-  title: `TestForm-${randomstring.generate({
-    charset: "alphabetic",
-    length: 8
-  })}`,
-  _created: new Date().toISOString(),
   survey: [
     {
       type: "begin group",

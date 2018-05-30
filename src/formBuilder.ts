@@ -82,7 +82,7 @@ export interface IBuilderForm {
   choices: any[];
   survey: any[];
   settings?: ISettings[];
-  title: string;
+  title?: string;
   _created?: string;
 }
 
