@@ -24,7 +24,7 @@ export const customRegisterProject = async (req: Request, res: Response) => {
 export const customDeleteProject = async (req: Request, res: Response) => {
   verifyRequest(req, res, ["POST"], ["name"]);
   const body: IDeleteProjectBody = req.body;
-  const options: request.Options = setRequestOptions({}, "/projects", "GET");
+  const options: request.Options = setRequestOptions(null, "/projects", "GET");
   const projectName = req.body.name;
   const projectToDelete = await getProjectByName(projectName);
   if (projectToDelete) {
@@ -79,7 +79,7 @@ These are used internally to do common tasks like setting request options and
 sending requests
 ************************************************************************************/
 async function getProjectByName(projectName: string) {
-  const options: request.Options = setRequestOptions({}, "/projects", "GET");
+  const options: request.Options = setRequestOptions(null, "/projects", "GET");
   const getProjects: any = await sendRequest(options);
   const allProjects: IProject[] = JSON.parse(getProjects.body);
   const project = allProjects.find(p => {
@@ -107,7 +107,7 @@ export interface IAddUsersBody {
 export interface IAddUsersBodyUser {
   username: string;
   role: "readonly" | "dataentry" | "editor" | "manager";
-  remove?:boolean
+  remove?: boolean;
 }
 
 // kobo api repsponses

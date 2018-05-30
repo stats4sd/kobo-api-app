@@ -227,13 +227,8 @@ These are used internally to do common tasks like setting request options and
 sending requests
 ************************************************************************************/
 
-export function setRequestOptions(req: Request, newPath?: string, newMethod?) {
+export function setRequestOptions(req?: Request, newPath?: string, newMethod?) {
   // headers sent by WordPress are getting in the way. Instead, reset headers and build custom set:
-  req.headers = {};
-  // add authorization - currently admin-only, will be passed from WordPress soon
-  req.headers.authorization = auth;
-  // req.headers.origin = "api.stats4sdtest.online"
-  // req.headers.host = "stats4sdtest.online"
   let finalPath: string = newPath;
   // set options for method, url and headers, including any path update
   if (!newPath) {
@@ -246,7 +241,9 @@ export function setRequestOptions(req: Request, newPath?: string, newMethod?) {
   const options: request.Options = {
     method: newMethod ? newMethod : req.method,
     url: koboURL + finalPath,
-    headers: req.headers
+    headers: {
+      authorization: auth
+    }
   };
   return options;
 }
