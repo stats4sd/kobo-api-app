@@ -9,10 +9,10 @@ import { postgresJsonPOST } from "./postgresApi";
 // wrapper around /data to pull form submissions, optionally adding query params to get submissions
 // after a given submission _id number
 export const customPullData = async (req: Request, res: Response) => {
-  verifyRequest(req, res, ["POST"], ["formID"]);
+  verifyRequest(req, res, ["POST"], ["formid"]);
   const body: IPullDataBody = req.body;
   const pullDataRes = getLatestSubmissions(
-    body.formID,
+    body.formid,
     body.latestSubmissionID
   );
   res.status(200).send(pullDataRes);
@@ -20,13 +20,13 @@ export const customPullData = async (req: Request, res: Response) => {
 
 // This is not an endpoint, but used by various endpoints to pull form submissions
 export async function getLatestSubmissions(
-  formID: number,
+  formid: number,
   latestSubmissionID?
 ) {
   // get data from /data/{pk} endpoint
   const options: request.Options = setRequestOptions(
     null,
-    "/data/" + formID,
+    "/data/" + formid,
     "GET"
   );
   const dataRequest = (await sendRequest(options)) as Request;
@@ -42,7 +42,7 @@ export async function getLatestSubmissions(
   }
   // send response
   const pullDataRes: IPullDataRes = {
-    _formID: formID,
+    formid: formid,
     _latestSubmissionID: latestSubmissionID,
     data: submissions,
     countTotal: countTotal,
@@ -60,14 +60,14 @@ sending requests
 These help to define the expected data structures
 ************************************************************************************/
 export interface IPullDataBody {
-  formID: number;
+  formid: number;
   latestSubmissionID?: number;
 }
 export interface IPullDataRes {
   countTotal: number;
   countNew: number;
   data: IFormSubmission[];
-  _formID: number;
+  formid: number;
   _latestSubmissionID: number;
 }
 

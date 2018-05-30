@@ -33,6 +33,6 @@ describe("pull latest submissions", () => {
     submissions and then pull a subset
 */
 const pullRequestData: koboExportApi.IPullDataBody = {
-  formID: 67050,
+  formid: 67050,
   latestSubmissionID: 1582382
 };

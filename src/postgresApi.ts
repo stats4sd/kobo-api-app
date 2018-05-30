@@ -25,7 +25,7 @@ const auth = "Basic" + config.kobotoolbox.token;
 export const postgresUpdateForm = async (req, res) => {
   const body: IPullDataBody = req.body;
   const pullDataRes = await getLatestSubmissions(
-    body.formID,
+    body.formid,
     body.latestSubmissionID
   );
   for (const record of pullDataRes.data) {

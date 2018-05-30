@@ -29,7 +29,7 @@ export const pipeRequest = (req, res) => {
 These are codeblocks called from api requests directly to the function name
 e.g. /getForms
 Additional parameters may appear either in POST message body or via path
-e.g. /getForms/:formID
+e.g. /getForms/:formid
 ************************************************************************************/
 
 // Example function that gets forms in same way standard api does (not used, just for refrence)
