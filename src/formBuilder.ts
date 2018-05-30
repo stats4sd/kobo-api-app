@@ -3,7 +3,10 @@ import { Parser } from "json2csv";
 import * as os from "os";
 import * as path from "path";
 import * as randomstring from "randomstring";
+import * as util from "util";
 import { utils, WorkBook, write, writeFile } from "xlsx";
+
+const writeAsync = util.promisify(fs.writeFile);
 
 /*
 This file contains the main function to convert form data into an xlsx file, which is then written to the file system for passing into kobo
@@ -50,11 +53,7 @@ export const buildXLSX = async (form: IBuilderForm) => {
     fileName = form.title;
   }
   const filePath = path.join(os.tmpdir(), fileName + ".xlsx");
-  await fs.writeFile(filePath, wbout, "binary", err => {
-    if (err) {
-      throw err;
-    }
-  });
+  await writeAsync(filePath, wbout, "binary");
   return {
     err: null,
     filePath: filePath
