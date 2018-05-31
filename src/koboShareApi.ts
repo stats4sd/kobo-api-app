@@ -15,7 +15,7 @@ export const shareFormWithUser = async (req: Request, res: Response) => {
     role: body.role
   };
 
-  options.headers.Referrer = "https://nrc-kobocat.stats4sdtest.online/nrcme/";
+  options.headers.Referer = "https://nrc-kobocat.stats4sdtest.online/";
   sendRequest(options,res).catch(err => console.log("error",err));
 }
 
