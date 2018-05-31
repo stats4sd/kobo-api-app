@@ -6,6 +6,20 @@ import * as builder from "./formBuilder";
 import { sendRequest, setRequestOptions, verifyRequest } from "./koboApi";
 import * as postgresApi from "./postgresApi";
 
+export const shareFormWithUser = async (req: Request, res: Response) => {
+  verifyRequest(req, res, ["POST"], ["username", "form_id","role"]);
+  const body: any = req.body;
+  const options: request.Options = setRequestOptions(req,`forms/${body.form_id}/share`);
+  options.formData = {
+    username: body.username,
+    role: body.role
+  };
+
+  options.headers.Referrer = "https://nrc-kobocat.stats4sdtest.online/nrcme/";
+  sendRequest(options,res).catch(err => console.log("error",err));
+}
+
+
 // wrapper around kobo /projects post (to avoid typing full user id path)
 export const customRegisterProject = async (req: Request, res: Response) => {
   verifyRequest(req, res, ["POST"], ["name", "owner"]);
