@@ -21,6 +21,7 @@ if (config.kobotoolbox.token !== "") {
 
 // standard function to redirect non-custom requests directly to kobo
 export const pipeRequest = (req, res) => {
+  console.log(req.body);
   const options = setRequestOptions(req);
   sendRequest(options, res);
 };

@@ -6,6 +6,9 @@ import * as builder from "./formBuilder";
 import { sendRequest, setRequestOptions, verifyRequest } from "./koboApi";
 import * as postgresApi from "./postgresApi";
 
+const koboURL = config.kobotoolbox.server;
+
+
 
 //can be done by vanilla API, so probably can be removed once general pipe request is working
 export const shareFormWithUser = async (req: Request, res: Response) => {
@@ -27,6 +30,46 @@ export const shareFormWithProject = async (req: Request, res: Response) => {
   const options: request.Options = setRequestOptions(req,`projects/${body.projectid}/forms`);
   options.formData = {
     formid: body.formid
+  };
+
+  options.headers.Referer = "https://nrc-kobocat.stats4sdtest.online/";
+  sendRequest(options,res).catch(err => console.log("error",err));
+}
+
+
+export const customRegisterTeam = async (req: Request, res: Response) => {
+  verifyRequest(req,res,["POST"],["name"]);
+  const body: any = req.body;
+  const options: request.Options = setRequestOptions(req,`teams`);
+  options.formData = {
+    name: body.name,
+    organization: "NRC"
+  };
+
+  options.headers.Referer = "https://nrc-kobocat.stats4sdtest.online/";
+  sendRequest(options,res).catch(err => console.log("error",err));
+}
+
+export const customRegisterUser = async (req: Request, res: Response) => {
+  verifyRequest(req,res,["POST"],["email","username"]);
+  const body: any = req.body;
+  const options: request.Options = setRequestOptions(req,`profiles`);
+  options.formData = {
+    name: body.username,
+    username: body.username,
+    email: body.email
+  };
+  console.log("data",options.formData);
+  options.headers.Referer = "https://nrc-kobocat.stats4sdtest.online/";
+  sendRequest(options,res).catch(err => console.log("error",err));
+}
+
+export const customAddUserToTeam = async (req: Request, res: Response) => {
+  verifyRequest(req,res,["POST"],["username","team_id"]);
+  const body: any = req.body;
+  const options: request.Options = setRequestOptions(req,`teams/${body.team_id}/members`);
+  options.formData = {
+    username: body.username,
   };
 
   options.headers.Referer = "https://nrc-kobocat.stats4sdtest.online/";
