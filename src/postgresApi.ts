@@ -31,7 +31,10 @@ export const postgresUpdateForm = async (req, res) => {
   for (const record of pullDataRes.data) {
     const upload = await postgresJsonPOST({
       method: "POST",
-      body: record
+      body: {
+        record:record,
+        formid:body.formid
+      }
     });
   }
   res.send(pullDataRes);
@@ -47,7 +50,8 @@ export const postgresJsonPOST = async (req, res?) => {
       break;
 
     case "POST":
-      const record = req.body;
+      const record = req.body.record;
+      const formid = req.body.formid
       console.log(
         ` 📰Record
         ${record}
@@ -65,8 +69,8 @@ export const postgresJsonPOST = async (req, res?) => {
 
       const query = {
         text:
-          "INSERT INTO xls_collected_data(record_id,form_id,record_data) VALUES($1,$2,$3)",
-        values: [record._uuid, record._form_kobo_id, record]
+          "INSERT INTO xls_collected_data(record_id,form_id,record_data) VALUES($1,$2,$3) ON CONFLICT (record_id,form_id) DO UPDATE SET record_data = $3",
+        values: [record._uuid, formid, record]
       };
 
       pool.connect().then(client => {
