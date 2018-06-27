@@ -25,7 +25,7 @@ export const shareFormWithUser = async (req: Request, res: Response) => {
 }
 
 export const shareFormWithProject = async (req: Request, res: Response) => {
-  verifyRequest(req,res,["POST"],["formid"]);
+  verifyRequest(req,res,["POST"],["formid","projectid"]);
   const body: any = req.body;
   const options: request.Options = setRequestOptions(req,`projects/${body.projectid}/forms`);
   options.formData = {
@@ -116,6 +116,33 @@ export const customAddUsersToProject = async (req: Request, res: Response) => {
 };
 
 // remove user from project
+// takes array of user objects (interface below) and adds to project, returning
+// a list of all project users after operation
+export const customRemoveUsersFromProject = async (req: Request, res: Response) => {
+  verifyRequest(req, res, ["POST"], ["users", "projectid"]);
+  const body: IAddUsersBody = req.body;
+  const projectid = body.projectid;
+  console.log("adding users", body);
+  const options = setRequestOptions(
+    null,
+    `/projects/${projectid}/share`,
+    "PUT"
+  );
+  // main loop to sequentially add user to project
+  for (const user of body.users) {
+    options.formData = {
+      username: user.username,
+      role: user.role,
+      remove: true
+    };
+    await sendRequest(options);
+  }
+  const updatedProject: IProject = await getProjectByID(projectid);
+  console.log("updated project", updatedProject);
+  // *** returns current project users array in all cases (even if operation not successful)
+  // additional validation needed client-side (see example in test)
+  res.status(200).send(updatedProject.users);
+};
 
 // remove form from project
 
@@ -162,6 +189,12 @@ export interface IAddUsersBody {
   users: IAddUsersBodyUser[];
   projectid: number;
 }
+
+export interface IAddUserToProjectsBody {
+  user: IAddUsersBodyUser;
+  projects: number[];
+}
+
 export interface IAddUsersBodyUser {
   username: string;
   role: "readonly" | "dataentry" | "editor" | "manager";

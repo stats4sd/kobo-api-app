@@ -58,28 +58,16 @@ export const customDeployForm = async (req: Request, res: Response) => {
 
 // Combination of customDeployForm above and customSetFormInfo code below
 // could be better merged if included both form (fields) and formData (xlsform) fields
-export const customUpdateForm = (req, res) => {
-  if (req.method === "PATCH") {
-    const form = req.body;
-    // build form and send request to kobo forms api, returning forms object
-    builder.buildXLSX(form).then(build => {
-      const filePath: string = build.filePath;
-      const options: any = setRequestOptions(req, `forms/${form.kobo_id}`);
-      options.formData = {
-        xls_file: {
-          value: fs.createReadStream(filePath)
-        }
-      };
-      sendRequest(options).then(body => {
-        res.send({
-          form: form,
-          msg: body
-        });
-      });
-    });
-  } else {
-    res.status(405).send(req.method + " method not allowed");
-  }
+export const customUpdateForm = async (req: Request, res: Response) => {
+  verifyRequest(req, res, ["PATCH"], ["choices", "survey"]);
+  const form = req.body;
+  const build = await builder.buildXLSX(form);
+  const filePath: string = build.filePath;
+  const options: any = setRequestOptions(req, `forms/${form.kobo_id}`);
+  options.formData = {
+    xls_file: fs.createReadStream(filePath)
+  };
+  sendRequest(options, res);
 };
 
 // generic update form function, can be passed update values in body
