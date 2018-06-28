@@ -24,6 +24,7 @@ export const shareFormWithUser = async (req: Request, res: Response) => {
   sendRequest(options,res).catch(err => console.log("error",err));
 }
 
+
 export const shareFormWithProject = async (req: Request, res: Response) => {
   verifyRequest(req,res,["POST"],["formid","projectid"]);
   const body: any = req.body;
@@ -115,6 +116,28 @@ export const customAddUsersToProject = async (req: Request, res: Response) => {
   res.status(200).send(updatedProject.users);
 };
 
+// can be done by vanilla API, so probably can be removed once general pipe request is working
+export const customShareFormWithUsers = async (req: Request, res: Response) => {
+  verifyRequest(req, res, ["POST"], ["users", "formid"]);
+  const body: any = req.body;
+  const formid: any = body.formid;
+  const options: request.Options = setRequestOptions(
+                                                     null,
+                                                     `/forms/${body.formid}/share`,
+                                                     "POST");
+  options.headers.Referer = "https://nrc-kobocat.stats4sdtest.online/";
+
+  for (const user of body.users){
+    options.formData = {
+      username: user.username,
+      role: user.role
+    };
+    await sendRequest(options);
+  }
+  const updatedForm = await getFormByID(formid);
+  res.status(200).send(updatedForm);
+}
+
 // remove user from project
 // takes array of user objects (interface below) and adds to project, returning
 // a list of all project users after operation
@@ -171,6 +194,16 @@ async function getProjectByID(projectid: number) {
   const project: IProject = JSON.parse(projectRequest.body);
   console.log("project", project);
   return project;
+}
+
+async function getFormByID(formid: number) {
+  const options: request.Options = setRequestOptions(
+                                                     null,`forms/${formid}`,
+                                                     "GET"
+                                                     );
+  const formRequest = (await sendRequest(options)) as Request;
+  const form: any = JSON.parse(formRequest.body);
+  return form;
 }
 
 /************ Interfaces ***********************************************************
