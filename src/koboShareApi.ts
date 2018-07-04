@@ -6,51 +6,12 @@ import * as builder from "./formBuilder";
 import { sendRequest, setRequestOptions, verifyRequest } from "./koboApi";
 import * as postgresApi from "./postgresApi";
 
+import * as tough from "tough-cookie";
+
 const koboURL = config.kobotoolbox.server;
 
 
-
-//can be done by vanilla API, so probably can be removed once general pipe request is working
-export const shareFormWithUser = async (req: Request, res: Response) => {
-  verifyRequest(req, res, ["POST"], ["username", "formid","role"]);
-  const body: any = req.body;
-  const options: request.Options = setRequestOptions(req,`forms/${body.formid}/share`);
-  options.formData = {
-    username: body.username,
-    role: body.role
-  };
-
-  options.headers.Referer = "https://nrc-kobocat.stats4sdtest.online/";
-  sendRequest(options,res).catch(err => console.log("error",err));
-}
-
-
-export const shareFormWithProject = async (req: Request, res: Response) => {
-  verifyRequest(req,res,["POST"],["formid","projectid"]);
-  const body: any = req.body;
-  const options: request.Options = setRequestOptions(req,`projects/${body.projectid}/forms`);
-  options.formData = {
-    formid: body.formid
-  };
-
-  options.headers.Referer = "https://nrc-kobocat.stats4sdtest.online/";
-  sendRequest(options,res).catch(err => console.log("error",err));
-}
-
-
-export const customRegisterTeam = async (req: Request, res: Response) => {
-  verifyRequest(req,res,["POST"],["name"]);
-  const body: any = req.body;
-  const options: request.Options = setRequestOptions(req,`teams`);
-  options.formData = {
-    name: body.name,
-    organization: "NRC"
-  };
-
-  options.headers.Referer = "https://nrc-kobocat.stats4sdtest.online/";
-  sendRequest(options,res).catch(err => console.log("error",err));
-}
-
+/************ USER Handling ****************************************************/
 export const customRegisterUser = async (req: Request, res: Response) => {
   verifyRequest(req,res,["POST"],["email","username"]);
   const body: any = req.body;
@@ -61,6 +22,20 @@ export const customRegisterUser = async (req: Request, res: Response) => {
     email: body.email
   };
   console.log("data",options.formData);
+  options.headers.Referer = "https://nrc-kobocat.stats4sdtest.online/";
+  sendRequest(options,res).catch(err => console.log("error",err));
+}
+
+// ***** TEAM HANDLING
+export const customRegisterTeam = async (req: Request, res: Response) => {
+  verifyRequest(req,res,["POST"],["name"]);
+  const body: any = req.body;
+  const options: request.Options = setRequestOptions(req,`teams`);
+  options.formData = {
+    name: body.name,
+    organization: "NRC"
+  };
+
   options.headers.Referer = "https://nrc-kobocat.stats4sdtest.online/";
   sendRequest(options,res).catch(err => console.log("error",err));
 }
@@ -77,6 +52,43 @@ export const customAddUserToTeam = async (req: Request, res: Response) => {
   sendRequest(options,res).catch(err => console.log("error",err));
 }
 
+export const customResetPassword = async (req: Request, res: Response) => {
+  verifyRequest(req,res,["POST"],["current_password","new_password","username"]);
+  const body: any = req.body;
+  const username: string = body.username
+  const options: request.Options = setRequestOptions(null,`profiles/${username}/change_password`,"POST");
+  options.formData = {
+    current_password: body.current_password,
+    new_password: body.new_password
+  }
+
+  console.log("data",options.formData);
+
+  // Get cookie and set CSRF header for extra-special password-changing auth:
+
+  const jar: request.CookieJar = request.jar();
+
+  const cookieGet = (await sendRequest({
+    url: config.kobotoolbox.server_root,
+    jar: jar
+  })) as Request;
+
+
+  options.jar = jar;
+
+  //unpack cookie to get at csrftoken:
+  const cookies: tough.Cookie[] = jar.getCookies(config.kobotoolbox.server_root);
+  const cookieJSON = cookies[0].toJSON()
+  
+  if(cookieJSON.key === "csrftoken"){
+    options.headers['X-CSRFToken'] = cookieJSON.value
+  }
+
+ options.headers.Referer = config.kobotoolbox.server_root;
+ sendRequest(options,res).catch(err => console.log("error",err));
+}
+
+/************ Project Handling ****************************************************/
 // wrapper around kobo /projects post (to avoid typing full user id path)
 export const customRegisterProject = async (req: Request, res: Response) => {
   verifyRequest(req, res, ["POST"], ["name", "owner"]);
@@ -116,27 +128,6 @@ export const customAddUsersToProject = async (req: Request, res: Response) => {
   res.status(200).send(updatedProject.users);
 };
 
-// can be done by vanilla API, so probably can be removed once general pipe request is working
-export const customShareFormWithUsers = async (req: Request, res: Response) => {
-  verifyRequest(req, res, ["POST"], ["users", "formid"]);
-  const body: any = req.body;
-  const formid: any = body.formid;
-  const options: request.Options = setRequestOptions(
-                                                     null,
-                                                     `/forms/${body.formid}/share`,
-                                                     "POST");
-  options.headers.Referer = "https://nrc-kobocat.stats4sdtest.online/";
-
-  for (const user of body.users){
-    options.formData = {
-      username: user.username,
-      role: user.role
-    };
-    await sendRequest(options);
-  }
-  const updatedForm = await getFormByID(formid);
-  res.status(200).send(updatedForm);
-}
 
 // remove user from project
 // takes array of user objects (interface below) and adds to project, returning
@@ -167,7 +158,56 @@ export const customRemoveUsersFromProject = async (req: Request, res: Response) 
   res.status(200).send(updatedProject.users);
 };
 
-// remove form from project
+
+/************ Sharing Forms ****************************************************/
+//can be done by vanilla API, so probably can be removed once general pipe request is working
+export const shareFormWithUser = async (req: Request, res: Response) => {
+  verifyRequest(req, res, ["POST"], ["username", "formid","role"]);
+  const body: any = req.body;
+  const options: request.Options = setRequestOptions(req,`forms/${body.formid}/share`);
+  options.formData = {
+    username: body.username,
+    role: body.role
+  };
+
+  options.headers.Referer = "https://nrc-kobocat.stats4sdtest.online/";
+  sendRequest(options,res).catch(err => console.log("error",err));
+}
+
+// can be done by vanilla API, so probably can be removed once general pipe request is working
+export const customShareFormWithUsers = async (req: Request, res: Response) => {
+  verifyRequest(req, res, ["POST"], ["users", "formid"]);
+  const body: any = req.body;
+  const formid: any = body.formid;
+  const options: request.Options = setRequestOptions(
+                                                     null,
+                                                     `/forms/${body.formid}/share`,
+                                                     "POST");
+  options.headers.Referer = "https://nrc-kobocat.stats4sdtest.online/";
+
+  for (const user of body.users){
+    options.formData = {
+      username: user.username,
+      role: user.role
+    };
+    await sendRequest(options);
+  }
+  const updatedForm = await getFormByID(formid);
+  res.status(200).send(updatedForm);
+}
+
+export const shareFormWithProject = async (req: Request, res: Response) => {
+  verifyRequest(req,res,["POST"],["formid","projectid"]);
+  const body: any = req.body;
+  const options: request.Options = setRequestOptions(req,`projects/${body.projectid}/forms`);
+  options.formData = {
+    formid: body.formid
+  };
+
+  options.headers.Referer = "https://nrc-kobocat.stats4sdtest.online/";
+  sendRequest(options,res).catch(err => console.log("error",err));
+}
+
 
 /************ Helper functions ****************************************************
 These are used internally to do common tasks like setting request options and

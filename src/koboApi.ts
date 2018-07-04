@@ -264,6 +264,7 @@ export function sendRequest(options, res?) {
         // handle non 200 responses, so status codes can be passed back to the originating app with the rest of the respnose.
         if (response.statusCode > 299 || response.statusCode < 200) {
           if (res) {
+            console.log("res status",response.statusCode)
             res.status(response.statusCode).send({
               error: "unsuccessful request",
               options: options,
