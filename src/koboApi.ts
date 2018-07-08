@@ -43,6 +43,17 @@ export const getForms = (req, res) => {
   }
 };
 
+export const getEnketo = async (req: Request, res: Response) => {
+  verifyRequest(req,res,["POST"],["formid"]);
+  const body: any = req.body;
+  const formid: number = body.formid;
+
+  const options: request.Options = setRequestOptions(null,`forms/${formid}/enketo`,"GET");
+
+  sendRequest(options,res);
+
+}
+
 export const customDeployForm = async (req: Request, res: Response) => {
   verifyRequest(req, res, ["POST"], ["choices", "survey"]);
   const form: builder.IBuilderForm = req.body;
