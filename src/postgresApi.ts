@@ -24,10 +24,14 @@ const auth = "Basic" + config.kobotoolbox.token;
 // pull missing records and update accordingly
 export const postgresUpdateForm = async (req, res) => {
   const body: IPullDataBody = req.body;
+  console.log()
   const pullDataRes = await getLatestSubmissions(
     body.formid,
     body.latestSubmissionID
   );
+
+  console.log("pullDataRes = ",pullDataRes);
+
   for (const record of pullDataRes.data) {
     const upload = await postgresJsonPOST({
       method: "POST",
@@ -52,6 +56,7 @@ export const postgresJsonPOST = async (req, res?) => {
     case "POST":
       const record = req.body.record;
       const formid = req.body.formid
+      console.log("record",record);
       console.log(
         ` 📰Record
         ${record}
@@ -59,9 +64,9 @@ export const postgresJsonPOST = async (req, res?) => {
       );
       /*
       POSTGRES TABLE:
-  
+
       field_name -> thing to populate with
-  
+
       record_id -> record._uuid
       form_id -> record._form_pmt_id
       record_data -> record;
